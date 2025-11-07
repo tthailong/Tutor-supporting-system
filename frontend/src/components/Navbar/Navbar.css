@@ -1,0 +1,80 @@
+.navbar{
+    padding-left: 40px;
+    padding-right: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #273988;
+}
+
+.navbar .logo{
+    width: 40px;
+}
+
+.navbar-menu{
+    display: flex;
+    list-style: none;
+    gap: 0px;
+    color: #fdfdfd;
+    font-size: 18px;
+
+}
+
+.navbar-right img{
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    filter: brightness(0) invert(1);
+}
+
+.navbar-right{
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.navbar button{
+    background: transparent;
+    font-size: 16px;
+    color: black;
+    border: none;
+}
+
+.navbar button:hover {
+    text-decoration: underline; 
+    cursor: pointer; 
+}
+
+.navbar .active{
+    padding-bottom: 20px;
+    padding-top: 20px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: #0388B4;
+}
+
+.navbar .nonactive{
+    padding-bottom: 20px;
+    padding-top: 20px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background: transparent;
+}
+
+.navbar li{
+    cursor: pointer;
+}
+
+.navbar-noti{
+    position: relative;
+}
+
+.navbar-noti .dot{
+    width: 8px;
+    height: 8px;
+    background-color: tomato;
+    border-radius: 50%;
+    position: absolute;
+    top: -2px;
+    right: -2px;
+}
