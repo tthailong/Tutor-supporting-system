@@ -1,0 +1,7 @@
+.setavailability-container {
+    display: flex;              /* Sidebar + Calendar side by side */
+    flex-direction: row;
+    width: 100%;
+    height: 100vh;
+    background-color: #fff;
+}

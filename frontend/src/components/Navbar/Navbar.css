@@ -1,4 +1,7 @@
 .navbar{
+    position: sticky;     /* or fixed if you want it *always* visible */
+    top: 0;               /* stick to top of the viewport */
+    z-index: 1000;        /* stay above other elements */
     padding-left: 40px;
     padding-right: 40px;
     display: flex;
