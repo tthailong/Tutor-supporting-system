@@ -17,3 +17,5 @@ app.get("/", (req, res) => {
 app.listen(port,() => {
     console.log('Server started on http://localhost:${port}');
 })
+
+//mongodb+srv://tss:tss@cluster0.ygriotm.mongodb.net/?appName=Cluster0

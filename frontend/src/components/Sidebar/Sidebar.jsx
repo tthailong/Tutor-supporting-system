@@ -1,22 +1,30 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
+import { Link, useLocation } from 'react-router-dom';
 
 const Sidebar = () => {
-    const [menu, setMenu] = useState("availability"); 
+    const location = useLocation();
 
     return (
-        <div className='sidebar'> 
+        <div className='sidebar'>
             <div className="sidebar-options">
-                <div onClick={() => setMenu("availability")} className={`sidebar-option ${menu === "availability" ? "active" : ""}`}>
-                    <button className='sidebar-button'>Set availability</button>
-                </div>
-                <div onClick={() => setMenu("sessions")} className={`sidebar-option ${menu === "sessions" ? "active" : ""}`}>
-                    <button className='sidebar-button'>View sessions</button>
-                </div>
-                <div onClick={() => setMenu("profile")} className={`sidebar-option ${menu === "profile" ? "active" : ""}`}>
-                    <button className='sidebar-button'>Manage profile</button>
-                </div>
-                
+                <Link
+                    to='/tutoractivities'
+                    className={`sidebar-option ${location.pathname === "/tutoractivities" ? "active" : ""}`}
+                >
+                    <div className='sidebar-button'>Set availability</div>
+                </Link>
+                <Link
+                    to='/tutorsessions'
+                    className={`sidebar-option ${location.pathname === "/tutorsessions" ? "active" : ""}`}
+                >
+                    <div className='sidebar-button'>View sessions</div>
+                </Link>
+                <Link
+                    to='/'
+                    className={`sidebar-option ${location.pathname === "/" ? "active" : ""}`}> {/*dummy code*/}
+                    <div className='sidebar-button'>Manage profile</div>
+                </Link>
             </div>
         </div>
     );
