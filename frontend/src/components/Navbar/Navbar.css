@@ -1,7 +1,8 @@
 .navbar{
-    position: sticky;     /* or fixed if you want it *always* visible */
-    top: 0;               /* stick to top of the viewport */
-    z-index: 1000;        /* stay above other elements */
+    position: sticky;     
+    top: 0;
+    height: 60px;               
+    z-index: 1000;        
     padding-left: 40px;
     padding-right: 40px;
     display: flex;
@@ -18,7 +19,7 @@
     display: flex;
     list-style: none;
     gap: 0px;
-    color: #fdfdfd;
+    color: #ffffff;
     font-size: 18px;
 
 }
@@ -49,7 +50,7 @@
 }
 
 .navbar .active{
-    padding-bottom: 20px;
+    padding-bottom: 18px;
     padding-top: 20px;
     padding-left: 8px;
     padding-right: 8px;
@@ -57,7 +58,7 @@
 }
 
 .navbar .nonactive{
-    padding-bottom: 20px;
+    padding-bottom: 18px;
     padding-top: 20px;
     padding-left: 8px;
     padding-right: 8px;
