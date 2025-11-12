@@ -1,0 +1,117 @@
+/* Main container for the "My sessions" box */
+.session-list-container {
+    background-color: #f8f8fc; /* Light gray background */
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    max-width: 800px; /* Constrain the size as seen in the image */
+    margin: 20px auto; /* Center the component */
+    position: absolute;
+    left: 50%;           /* move left edge to center */
+    transform: translateX(-50%); /* truly center the content */
+}
+
+/* Title styling */
+.session-list-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Container for search, filters, and add button */
+.search-filter-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 15px;
+}
+
+/* Wrapper to control the width of the search bar */
+.search-bar-wrapper {
+    flex-grow: 1;
+    max-width: 300px; /* Adjust as needed */
+    position: relative;
+}
+
+.controls-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+/* Filter buttons styling */
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-button {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #555;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.filter-button:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+
+/* Add Session button styling */
+.add-session-button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #38a169; /* Green color for action button */
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.add-session-button:hover {
+    background-color: #2f855a;
+}
+
+/* Container for the actual session cards */
+.session-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Spacing between cards */
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+    .session-list-container {
+        padding: 15px;
+        margin: 10px;
+    }
+
+    .search-filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-bar-wrapper {
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .controls-right {
+        justify-content: space-between;
+        gap: 10px;
+    }
+    
+    .filter-buttons {
+        flex-grow: 1;
+        justify-content: flex-start;
+    }
+}
