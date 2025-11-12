@@ -11,8 +11,8 @@ const Home = () => {
   return (
     <div>
       <Header/>
-      <Searchbar setResults={setResults}/> {/* for testing purpose */}
-      <Searchresultlist results={results}/> {/* for testing purpose */}
+      {/*<Searchbar setResults={setResults}/> 
+      <Searchresultlist results={results}/> */}
     </div>
   )
 }
