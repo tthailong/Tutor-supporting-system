@@ -21,4 +21,21 @@ const finalSchedule = Object.entries(frontendAvailability)
     { dayOfWeek: 'Mon', timeSlot: '13:00-14:00' },
     ...
 ]
+
+function isSlotAvailable(tutorAvailability, sessionSlot) {
+  const daySlots = tutorAvailability[sessionSlot.day]; // e.g., Mon: [{start, end}, ...]
+
+  if (!daySlots || daySlots.length === 0) return false; // no availability on that day
+
+  // Convert "HH:MM" → number for comparison
+  const sessionStart = Number(sessionSlot.start.replace(":", ""));
+  const sessionEnd = Number(sessionSlot.end.replace(":", ""));
+
+  // Check if session fits inside any of the available slots
+  return daySlots.some(slot => {
+    const slotStart = Number(slot.start.replace(":", ""));
+    const slotEnd = Number(slot.end.replace(":", ""));
+    return sessionStart >= slotStart && sessionEnd <= slotEnd;
+  });
+
 */}
