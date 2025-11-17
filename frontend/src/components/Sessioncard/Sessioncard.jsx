@@ -12,17 +12,12 @@ const MOCK_SESSION_DATA = {
     status: 'scheduled',
 };
 
-// Placeholder handler functions (replace with actual logic)
 const handleReschedule = (s) => console.log(`Reschedule session ${s.id}`);
 const handleEdit = (s) => console.log(`Edit session ${s.id}`);
 const handleDelete = (s) => console.log(`Delete session ${s.id}`);
 
 const Sessioncard = ({ role = 'student' }) => { // Default role to 'tutor' for testing icons
-    
-    // The component uses the hardcoded data defined above.
     const session = MOCK_SESSION_DATA;
-    
-    // Destructure for cleaner access in the HTML
     const { title, time, location, capacity, signedUp } = session;
 
     return (
