@@ -36,7 +36,7 @@ function hasOverlap(slots) {
 // --------------------
 // TIME SLOT SCHEMA
 // --------------------
-const timeSlotSchema = new mongoose.Schema({
+export const timeSlotSchema = new mongoose.Schema({
   start: {
     type: String,
     enum: timeEnum,
@@ -119,4 +119,5 @@ const tutorSchema = new mongoose.Schema({
 // --------------------
 // EXPORT MODEL
 // --------------------
-export default mongoose.model("Tutor", tutorSchema);
+const tutorModel = mongoose.model("Tutor", tutorSchema);
+export default tutorModel;

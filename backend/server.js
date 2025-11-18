@@ -1,6 +1,7 @@
 import express from "express"
 import cors from "cors"
 import { connectDB } from "./config/db.js"
+import  sessionRouter  from "./routes/sessionRoute.js"
 
 
 // app config
@@ -13,6 +14,10 @@ app.use(cors())
 
 // db connection
 connectDB();
+
+//api routes
+app.use("/api/session",sessionRouter)
+
 
 app.get("/", (req, res) => {
     res.send("API working")
