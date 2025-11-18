@@ -39,3 +39,33 @@ function isSlotAvailable(tutorAvailability, sessionSlot) {
   });
 
 */}
+
+
+import sessionModel from "../models/sessionModel.js";
+import fs from "fs"; //for file handling
+
+const createSession = async (req, res) => {
+  console.log("req.body:", req.body); // check what's actually received
+
+  //if (!req.body || !req.body.name) {
+  //  return res.status(400).json({ success: false, message: "Missing fields" });
+  //}
+
+    const session = new sessionModel({
+        name: req.body.name,
+        location: req.body.location,
+        //timeTable: req.body.timeTable,
+        duration: req.body.duration,
+        capacity: req.body.capacity,
+        studentcount: req.body.studentcount
+    });
+    try {
+        await session.save();
+        res.json({success: true, message: "Session created successfully"});
+    } catch (error) {
+        console.log(error);
+        res.json({success: false, message: "Error"});
+    }
+}
+
+export { createSession }; 
