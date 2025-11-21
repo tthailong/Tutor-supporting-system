@@ -86,3 +86,133 @@
         align-self: flex-end; 
     }
 }
+
+.feedback-section {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.student-feedback, .tutor-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.give-feedback-btn, .record-progress-btn {
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.give-feedback-btn:hover, .record-progress-btn:hover {
+  background: linear-gradient(135deg, #3182ce, #2b6cb0);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
+}
+
+.submitted-feedback, .progress-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feedback-header, .progress-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.feedback-label, .progress-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 13px;
+}
+
+.feedback-comment {
+  background: #f7fafc;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border-left: 3px solid #4299e1;
+  font-style: italic;
+  color: #4a5568;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.feedback-date, .last-updated {
+  font-size: 12px;
+  color: #718096;
+  font-style: italic;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.excellent {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status-badge.good {
+  background: #bee3f8;
+  color: #1a365d;
+}
+
+.status-badge.average {
+  background: #faf089;
+  color: #744210;
+}
+
+.status-badge.needs-improvement {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+/* Responsive updates */
+@media (max-width: 600px) {
+  .feedback-header, .progress-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .give-feedback-btn, .record-progress-btn {
+    align-self: stretch;
+    text-align: center;
+  }
+}
+/* Add to Sessioncard.css */
+.student-info-display {
+  font-size: 13px;
+  color: #4a5568;
+  margin: 4px 0;
+  padding: 4px 0;
+}
+
+.progress-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}

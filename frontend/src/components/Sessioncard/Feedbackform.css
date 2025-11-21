@@ -1,0 +1,232 @@
+.feedback-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Đổi từ center sang flex-start */
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+  padding: 20px 0; /* Thêm padding top/bottom */
+  overflow-y: auto; /* Cho phép scroll toàn bộ overlay */
+}
+
+.feedback-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh; /* Giảm từ 90vh xuống 85vh */
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+  margin: 20px auto; /* Thêm margin để căn giữa */
+}
+
+.feedback-form {
+  padding: 25px; /* Giảm padding */
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 20px; /* Giảm margin */
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 15px; /* Giảm padding */
+}
+
+.form-header h3 {
+  color: #2d3748;
+  font-size: 22px; /* Giảm font size */
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.form-header p {
+  color: #718096;
+  font-size: 13px; /* Giảm font size */
+  margin: 0;
+  line-height: 1.4;
+}
+
+.form-group {
+  margin-bottom: 20px; /* Giảm margin */
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 10px; /* Giảm margin */
+  font-size: 14px; /* Giảm font size */
+}
+
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Giảm gap */
+  flex-wrap: wrap;
+}
+
+.star {
+  font-size: 28px; /* Giảm font size */
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px; /* Giảm padding */
+  border-radius: 4px;
+}
+
+.star:hover {
+  transform: scale(1.1); /* Giảm scale */
+  background-color: #f7fafc;
+}
+
+.star.filled {
+  color: #fbbf24;
+}
+
+.rating-text {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 13px; /* Giảm font size */
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px; /* Giảm padding */
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  background-color: #fafafa;
+  min-height: 100px; /* Thêm min-height */
+  box-sizing: border-box; /* Quan trọng */
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #4299e1;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.form-textarea::placeholder {
+  color: #a0aec0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px; /* Giảm gap */
+  justify-content: flex-end;
+  margin-top: 25px; /* Giảm margin */
+  padding-top: 15px; /* Giảm padding */
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn {
+  padding: 10px 20px; /* Giảm padding */
+  border: none;
+  border-radius: 6px;
+  font-size: 13px; /* Giảm font size */
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 110px; /* Giảm min-width */
+}
+
+.btn-cancel {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+}
+
+.btn-cancel:hover {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #38a169, #2f855a);
+  color: white;
+  border: 2px solid #2f855a;
+}
+
+.btn-submit:hover {
+  background: linear-gradient(135deg, #2f855a, #276749);
+  transform: translateY(-1px);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .feedback-modal {
+    width: 95%;
+    margin: 10px;
+    max-height: 90vh; /* Tăng height trên mobile */
+  }
+  
+  .feedback-form {
+    padding: 20px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .star-rating {
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .star {
+    font-size: 24px;
+  }
+  
+  .feedback-modal-overlay {
+    padding: 10px 0; /* Giảm padding trên mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .feedback-form {
+    padding: 15px;
+  }
+  
+  .form-header h3 {
+    font-size: 20px;
+  }
+  
+  .star {
+    font-size: 22px;
+  }
+}
