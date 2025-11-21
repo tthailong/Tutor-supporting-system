@@ -46,7 +46,7 @@ import fs from "fs"; //for file handling
 
 const createSession = async (req, res) => {
   console.log("req.body:", req.body); // check what's actually received
-
+  
   //if (!req.body || !req.body.name) {
   //  return res.status(400).json({ success: false, message: "Missing fields" });
   //}
