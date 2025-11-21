@@ -21,10 +21,10 @@ const sessionSchema = new mongoose.Schema({
 
     studentcount: {type: Number, default: true },
 
-    //students: [{
-     //   type: mongoose.Schema.Types.ObjectId,
-     //   ref: 'User'
-    //}]
+    students: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }]
 });
 
 const sessionModel = mongoose.models.Session || mongoose.model("Session", sessionSchema);

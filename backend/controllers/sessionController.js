@@ -68,4 +68,23 @@ const createSession = async (req, res) => {
     }
 }
 
+{/* this is for count student who register program
+    async function getRegisteredCount(sessionId) {
+  try {
+    const session = await Session.findById(sessionId)
+      .select('students') // Only fetch the students array
+      .exec();
+
+    if (!session) {
+      return 0; // Or throw an error if the session is not found
+    }
+
+    // The count is the length of the array of student IDs
+    const studentCount = session.students.length;
+    return studentCount;
+  } catch (error) {
+    console.error("Error fetching student count:", error);
+    throw error;
+  }
+} */}
 export { createSession }; 
