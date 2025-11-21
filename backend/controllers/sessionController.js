@@ -1,4 +1,4 @@
-{/*// Ví dụ logic trong Node/Express Controller
+/*// Ví dụ logic trong Node/Express Controller
 // (Giả sử: const frontendAvailability = req.body;)
 
 const finalSchedule = Object.entries(frontendAvailability)
@@ -38,7 +38,7 @@ function isSlotAvailable(tutorAvailability, sessionSlot) {
     return sessionStart >= slotStart && sessionEnd <= slotEnd;
   });
 
-*/}
+*/
 
 
 import sessionModel from "../models/sessionModel.js";
@@ -57,7 +57,6 @@ const createSession = async (req, res) => {
         //timeTable: req.body.timeTable,
         duration: req.body.duration,
         capacity: req.body.capacity,
-        studentcount: req.body.studentcount
     });
     try {
         await session.save();
@@ -68,7 +67,7 @@ const createSession = async (req, res) => {
     }
 }
 
-{/* this is for count student who register program
+/* this is for count student who register program
     async function getRegisteredCount(sessionId) {
   try {
     const session = await Session.findById(sessionId)
@@ -86,5 +85,5 @@ const createSession = async (req, res) => {
     console.error("Error fetching student count:", error);
     throw error;
   }
-} */}
+} */
 export { createSession }; 
