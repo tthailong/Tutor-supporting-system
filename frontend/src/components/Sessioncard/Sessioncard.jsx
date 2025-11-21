@@ -39,7 +39,6 @@ const MOCK_SESSION_DATA = {
   }
 };
 
-// Placeholder handler functions (replace with actual logic)
 const handleReschedule = (s) => console.log(`Reschedule session ${s.id}`);
 const handleEdit = (s) => console.log(`Edit session ${s.id}`);
 const handleDelete = (s) => console.log(`Delete session ${s.id}`);

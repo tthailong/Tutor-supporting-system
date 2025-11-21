@@ -9,8 +9,6 @@
     max-height: 300px;
     overflow-y: scroll;
     position: absolute; 
-    
-    /* 🔥 Key Fix 3: Position it right below the search bar */
-    top: 100%; /* Places the top edge right below the search bar */
+    top: 100%; 
     left: 0;
 }
