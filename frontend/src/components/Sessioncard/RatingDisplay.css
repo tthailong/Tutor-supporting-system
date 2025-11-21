@@ -1,0 +1,72 @@
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+.rating-display.no-rating {
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.stars-container {
+  display: flex;
+  gap: 2px;
+}
+
+.rating-star {
+  font-size: 16px;
+  transition: color 0.2s ease;
+}
+
+.rating-star.filled {
+  color: #fbbf24;
+}
+
+.rating-star.empty {
+  color: #e2e8f0;
+}
+
+/* Size variants */
+.rating-display.small .rating-star {
+  font-size: 14px;
+}
+
+.rating-display.medium .rating-star {
+  font-size: 16px;
+}
+
+.rating-display.large .rating-star {
+  font-size: 20px;
+}
+
+.rating-display.small .rating-text {
+  font-size: 12px;
+}
+
+.rating-display.medium .rating-text {
+  font-size: 14px;
+}
+
+.rating-display.large .rating-text {
+  font-size: 16px;
+}
+
+.rating-text {
+  font-weight: 600;
+  color: #4a5568;
+  white-space: nowrap;
+}
+
+/* Hover effects for interactive ratings */
+.rating-display.interactive .rating-star {
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 2px;
+}
+
+.rating-display.interactive .rating-star:hover {
+  background-color: #f7fafc;
+  transform: scale(1.1);
+}
