@@ -5,47 +5,16 @@ import FeedbackForm from './FeedbackForm';
 import ProgressTracker from './ProgressTracker';
 
 // Cập nhật MOCK_SESSION_DATA trong Sessioncard.jsx
-const MOCK_SESSION_DATA = {
-  id: 1,
-  title: 'General Chemistry (CH1003)_Đặng Bảo Trọng (CLC_HK251)',
-  time: 'Monday 13:00-14:50',
-  location: 'B1-303',
-  capacity: 6,
-  signedUp: 5,
-  status: 'scheduled',
 
-  id: 2,
-  title: 'General Chemistry (CH1003)_Đặng Bảo Trọng (CLC_HK251)',
-  time: 'Tuesday 13:00-14:50',
-  location: 'B1-303',
-  capacity: 10,
-  signedUp: 7,
-  status: 'scheduled',
-  // NEW FEEDBACK FIELDS
-  studentFeedback: {
-    rating: 0, // 0 = chưa đánh giá, 1-5 = số sao
-    comment: '',
-    submitted: false,
-    date: ''
-  },
-  tutorProgress: {
-    studentName: '',
-    studentId: '',
-    strengths: '',
-    weaknesses: '',
-    suggestions: '',
-    overallStatus: '',
-    lastUpdated: ''
-  }
-};
 
 const handleReschedule = (s) => console.log(`Reschedule session ${s.id}`);
 const handleEdit = (s) => console.log(`Edit session ${s.id}`);
 const handleDelete = (s) => console.log(`Delete session ${s.id}`);
 
 // NEW: State management component
-const SessioncardWithFeedback = ({ role = 'student' }) => {
-  const [session, setSession] = React.useState(MOCK_SESSION_DATA);
+const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit }) => {
+  const [session, setSession] = React.useState(sessionData);
+  
   const [showFeedbackForm, setShowFeedbackForm] = React.useState(false);
   const [showProgressTracker, setShowProgressTracker] = React.useState(false);
 
@@ -165,7 +134,7 @@ const SessioncardWithFeedback = ({ role = 'student' }) => {
               <span onClick={() => setShowProgressTracker(true)} title="Record Progress">
                 📊
               </span>
-              <span onClick={() => handleEdit(session)} title="Edit">
+              <span onClick={() => onEdit?.(session)} title="Edit">
                 ✏️
               </span>
               <span onClick={() => handleDelete(session)} title="Delete">
@@ -198,8 +167,15 @@ const SessioncardWithFeedback = ({ role = 'student' }) => {
 }
 
 // Keep the original component for backward compatibility
-const Sessioncard = ({ role = 'student' }) => {
-  return <SessioncardWithFeedback role={role} />;
-}
+const Sessioncard = ({ data, role = 'student', onEdit }) => {
+  return (
+    <SessioncardWithFeedback 
+      sessionData={data}
+      role={role}
+      onEdit={onEdit}
+    />
+  );
+};
+
 
 export default Sessioncard
