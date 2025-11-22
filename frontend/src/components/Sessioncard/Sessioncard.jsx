@@ -16,8 +16,9 @@ const handleReschedule = (s) => console.log(`Reschedule session ${s.id}`);
 const handleEdit = (s) => console.log(`Edit session ${s.id}`);
 const handleDelete = (s) => console.log(`Delete session ${s.id}`);
 
-const Sessioncard = ({ role = 'student' }) => { // Default role to 'tutor' for testing icons
-    const session = MOCK_SESSION_DATA;
+const Sessioncard = ({ role = 'student', data, onEdit }) => { // Default role to 'tutor' for testing icons
+    //const session = MOCK_SESSION_DATA;
+    const session = data || MOCK_SESSION_DATA;
     const { title, time, location, capacity, signedUp } = session;
 
     return (
@@ -44,9 +45,7 @@ const Sessioncard = ({ role = 'student' }) => { // Default role to 'tutor' for t
                     </span>
                     {role === 'tutor' && (
                         <>
-                            <span onClick={() => handleEdit(session)}>
-                                ✏️
-                            </span>
+                            <span onClick={() => onEdit && onEdit(session)}>✏️</span>
                             <span onClick={() => handleDelete(session)}>
                                 🗑️
                             </span>

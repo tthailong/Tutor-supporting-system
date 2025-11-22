@@ -1,31 +1,31 @@
-import express from "express"
-import cors from "cors"
-import { connectDB } from "./config/db.js"
-import  sessionRouter  from "./routes/sessionRoute.js"
+    import express from "express"
+    import cors from "cors"
+    import { connectDB } from "./config/db.js"
+    import  sessionRouter  from "./routes/sessionRoute.js"
 
 
-// app config
-const app = express()
-const port = 4000
+    // app config
+    const app = express()
+    const port = 4000
 
-// middlewares
-app.use(express.json())
-app.use(cors())
+    // middlewares
+    app.use(express.json())
+    app.use(cors())
 
-// db connection
-connectDB();
+    // db connection
+    connectDB();
 
-//api routes
-app.use("/api/session",sessionRouter)
+    //api routes
+    app.use("/api/session",sessionRouter)
 
 
-app.get("/", (req, res) => {
-    res.send("API working")
-})
+    app.get("/", (req, res) => {
+        res.send("API working")
+    })
 
-app.listen(port,() => {
-    console.log(`Server started on http://localhost:${port}`);
-})
+    app.listen(port,() => {
+        console.log(`Server started on http://localhost:${port}`);
+    })
 
-//mongodb+srv://tss:tss@cluster0.cs24pav.mongodb.net/Tutor-supporting-system
-//user name is tss, password is tss
+    //mongodb+srv://tss:tss@cluster0.cs24pav.mongodb.net/Tutor-supporting-system
+    //user name is tss, password is tss
