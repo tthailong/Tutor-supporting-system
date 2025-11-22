@@ -62,7 +62,7 @@ const Sessionlist = () => {
             </button>
           </div>
         </div>
-        <Sessioncard role="student" />
+        <Sessioncard role="tutor" />
 
       </div>
     </div>
