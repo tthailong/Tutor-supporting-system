@@ -98,7 +98,6 @@ const Sessionlist = () => {
             </button>
           </div>
         </div>
-<<<<<<< HEAD
         {sessionsToDisplay.map(session => (
           <Sessioncard 
             key={session.id} 
@@ -110,13 +109,10 @@ const Sessionlist = () => {
             }}
           />
         ))}
-=======
-        <Sessioncard role="student" />
->>>>>>> 790ce017b366349f2c87d41e904fbaa4c85fc7c7
 
       </div>
 
-      {/* THE MODAL */}
+      {/* THE form */}
       <Sessionform
          isOpen={isFormOpen} 
          onClose={() => setIsFormOpen(false)} 
