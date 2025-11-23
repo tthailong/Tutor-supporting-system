@@ -2,6 +2,7 @@ import React from 'react'
 import Navbar from './components/Navbar/Navbar'
 import { Route, Routes } from 'react-router-dom'
 import Home from './pages/Home/Home'
+import Manageprofile from './pages/Manageprofile/Manageprofile'
 import Setavailabililty from './pages/Setavailability/Setavailabililty'
 import Tutorviewsessions from './pages/Tutorviewsessions/Tutorviewsessions'
 import Footer from './components/Footer/Footer'
@@ -16,6 +17,7 @@ const App = () => {
         <Navbar />
         <Routes>
           <Route path='/' element={<Home />} />
+          <Route path='/profile' element={<Manageprofile />} />
           <Route path='/tutoractivities' element={<Setavailabililty />} />
           <Route path='/tutorsessions' element={<Tutorviewsessions />} />
           <Route path='/login' element={<Login />} />
