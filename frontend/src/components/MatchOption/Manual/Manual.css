@@ -1,0 +1,207 @@
+.manual-container {
+  padding: 2rem;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.manual-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.manual-header h2 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.manual-header p {
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Filter Section Styles */
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: 2rem;
+  justify-content: center;
+}
+
+.search-bar {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 15px 12px 40px;
+  border-radius: 25px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-bar input:focus {
+  border-color: #4EAAF3;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+}
+
+.filter-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-icon {
+  position: absolute;
+  left: 15px;
+  z-index: 1;
+  color: #888;
+}
+
+.filter-group select {
+  padding: 12px 20px 12px 40px; /* Extra padding for icon if present */
+  border-radius: 25px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  outline: none;
+  cursor: pointer;
+  background-color: white;
+  min-width: 180px;
+}
+
+.filter-group select:focus {
+  border-color: #4EAAF3;
+}
+
+/* Grid and Card Styles */
+.tutor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 2rem;
+}
+
+.tutor-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.tutor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.tutor-avatar {
+  font-size: 4rem;
+  color: #ccc;
+  margin-bottom: 1rem;
+}
+
+.tutor-info h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+.tutor-subject {
+  color: #4EAAF3;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.tutor-meta {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.tutor-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  color: #f1c40f;
+  font-weight: bold;
+}
+
+.tutor-bio {
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.select-btn {
+  background-color: #FFD700;
+  color: #000;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+  margin-top: auto; /* Push to bottom */
+}
+
+.select-btn:hover {
+  background-color: #f4c430;
+}
+
+.back-btn {
+  background: transparent;
+  border: 2px solid #ccc;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  cursor: pointer;
+  color: #666;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  border-color: #999;
+  color: #333;
+}
+
+.no-results {
+  width: 100%;
+  text-align: center;
+  color: #888;
+  font-size: 1.2rem;
+  grid-column: 1 / -1;
+}
