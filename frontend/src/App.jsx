@@ -21,6 +21,7 @@ const App = () => {
         <Navbar />
         <Routes>
           <Route path='/' element={<Home />} />
+          <Route path='/login' element={<Login />} />
           <Route path='/profile' element={<Manageprofile />} />
           <Route path='/tutoractivities' element={<Setavailabililty />} />
           <Route path='/tutorsessions' element={<Tutorviewsessions />} />
