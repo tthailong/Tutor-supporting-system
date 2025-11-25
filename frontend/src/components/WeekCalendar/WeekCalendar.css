@@ -285,3 +285,37 @@
   background-color: #FEF2F2;
   border-radius: 8px;
 }
+
+/* ... container styles ... */
+
+.slot-cell {
+  background-color: white; /* Default White */
+  border: 1px solid #eee;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: 0.2s;
+}
+
+/* Green Slot (Tutor set as Free) */
+.slot-cell.selected {
+  background-color: #4CAF50; /* Green */
+  color: white;
+}
+
+/* Gray Slot (Booked by Student) */
+.slot-cell.booked {
+  background-color: #ccc; /* Gray */
+  color: #666;
+  cursor: not-allowed;
+  pointer-events: none; /* Prevents clicking */
+}
+
+.slot-cell:hover:not(.booked) {
+  background-color: #f0f0f0;
+}
+.slot-cell.selected:hover {
+  background-color: #45a049;
+}

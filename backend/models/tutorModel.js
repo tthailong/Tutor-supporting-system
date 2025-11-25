@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 // --------------------
 const timeEnum = [
   "07:00","08:00","09:00","10:00","11:00",
-  "12:00","13:00","14:00","15:00","16:00","17:00","18:00"
+  "12:00","13:00","14:00","15:00","16:00","17:00"
 ];
 
 // --------------------
@@ -16,7 +16,7 @@ function hasOverlap(slots) {
 
   const parsed = slots.map(s => ({
     start: Number(s.start.replace(":", "")),
-    end: Number(s.end.replace(":", ""))
+    end: Number(s.end.replace(":", "")),
   }));
 
   parsed.sort((a, b) => a.start - b.start);
@@ -26,7 +26,6 @@ function hasOverlap(slots) {
       return true;
     }
   }
-
   return false;
 }
 
@@ -52,49 +51,9 @@ const timeSlotSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
-// --------------------
-// WEEKLY AVAILABILITY SCHEMA
-// --------------------
-const weeklyAvailabilitySchema = new mongoose.Schema({
-  Mon: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Monday timeslots overlap"
-    }
-  },
-  Tue: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Tuesday timeslots overlap"
-    }
-  },
-  Wed: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Wednesday timeslots overlap"
-    }
-  },
-  Thu: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Thursday timeslots overlap"
-    }
-  },
-  Fri: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Friday timeslots overlap"
-    }
-  }
-}, { _id: false });
 
 // --------------------
-// BOOKED SLOT SCHEMA (ACTUAL SESSIONS)
+// BOOKED SLOT SCHEMA
 // --------------------
 const bookedSlotSchema = new mongoose.Schema({
   date: { type: Date, required: true },
@@ -107,6 +66,7 @@ const bookedSlotSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+
 // --------------------
 // TUTOR SCHEMA
 // --------------------
@@ -116,25 +76,35 @@ const tutorSchema = new mongoose.Schema({
   expertise: { type: [String], required: true },
   description: { type: String },
 
-  // Weekly recurring availability
+  // Key-based dynamic availability: "YYYY-MM-DD": [timeslots]
   availability: {
-    type: weeklyAvailabilitySchema,
-    required: true,
-    default: {
-      Mon: [],
-      Tue: [],
-      Wed: [],
-      Thu: [],
-      Fri: []
-    }
+    type: Map,
+    of: [timeSlotSchema],
+    default: {}
   },
 
-  // Actual booked sessions
   bookedSlots: {
     type: [bookedSlotSchema],
     default: []
   }
 });
+
+
+// --------------------
+// PRE-SAVE: Check Overlap Per Date
+// --------------------
+tutorSchema.pre("save", function (next) {
+  const availability = this.availability || new Map();
+
+  for (const [date, slots] of availability.entries()) {
+    if (hasOverlap(slots)) {
+      return next(new Error(`Time slots overlap on ${date}`));
+    }
+  }
+
+  next();
+});
+
 
 // --------------------
 // EXPORT MODEL
