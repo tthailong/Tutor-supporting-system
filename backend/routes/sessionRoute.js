@@ -8,7 +8,5 @@ const upload = multer();
 
 sessionRouter.post("/create",upload.none(), createSession);
 
-sessionRouter.get("/test", (req, res) => {
-    res.send("Session route works!");
-});
+
 export default sessionRouter;

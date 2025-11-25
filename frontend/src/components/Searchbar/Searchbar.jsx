@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import './Searchbar.css'
 import { FaSearch } from 'react-icons/fa'
 
-const Searchbar = ({setResults}) => {
+const Searchbar = ({ onSearch }) => {
     const [input, setInput] = useState('');
 
     const fetchData = (value) => {
@@ -16,7 +16,8 @@ const Searchbar = ({setResults}) => {
 
     const handleChange = (value) => {
         setInput(value);
-        fetchData(value);
+        //fetchData(value);
+        onSearch(value); 
     }
     return (
         <div className="input-wrapper">

@@ -27,8 +27,9 @@ const Sidebar = () => {
                     <div className='sidebar-button'>Match tutor</div>
                 </Link>
                 <Link
-                    to='/'
-                    className={`sidebar-option ${location.pathname === "/" ? "active" : ""}`}> {/*dummy code*/}
+                    to='/profile'
+                    className={`sidebar-option ${location.pathname === "/profile" ? "active" : ""}`}
+                >
                     <div className='sidebar-button'>Manage profile</div>
                 </Link>
             </div>

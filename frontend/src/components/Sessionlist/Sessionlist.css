@@ -88,6 +88,27 @@
     gap: 15px; /* Spacing between cards */
 }
 
+.filter-buttons select {
+    border: none;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none; /* remove default focus border */
+    transition: background-color 0.2s;
+}
+  
+.filter-buttons select:hover {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+
+.filter-buttons select:focus {
+    background-color: #f0f0f0;
+    border-color: #ccc;
+}
+
+
 /* Media query for smaller screens */
 @media (max-width: 768px) {
     .session-list-container {
