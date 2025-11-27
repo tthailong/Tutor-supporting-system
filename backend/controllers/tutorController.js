@@ -18,6 +18,10 @@ export const getTutorData = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      name: tutor.name,
+      phone: tutor.phone,
+      expertise: tutor.expertise,
+      description: tutor.description,
       availability: tutor.availability || {},
       bookedSlots: tutor.bookedSlots || []
     });

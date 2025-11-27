@@ -1,8 +1,11 @@
 import express from "express"
 import cors from "cors"
 import { connectDB } from "./config/db.js"
-import  sessionRouter  from "./routes/sessionRoute.js"
+
+import sessionRouter  from "./routes/sessionRoute.js"
 import tutorRouter from "./routes/tutorRoute.js"
+import awardRouter from "./routes/awardRoute.js"
+
 import "dotenv/config.js"
 
 
@@ -20,6 +23,7 @@ connectDB();
 //api routes
 app.use("/api/tutors", tutorRouter);
 app.use("/api/session",sessionRouter)
+app.use("/api/awards", awardRouter);
 
 
 app.get("/", (req, res) => {
