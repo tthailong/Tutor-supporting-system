@@ -276,11 +276,11 @@ const Manual = () => {
       {showSuccessModal && selectedTutor && (
         <div className="modal-overlay">
           <div className="modal-content success-modal">
-            <div className="modal-header">
-              <div className="modal-icon success">
+            <div className="modal-header-with-icon">
+              <h2>Match Request Sent!</h2>
+              <div className="modal-icon-right success">
                 <FaCheckCircle />
               </div>
-              <h2>Match Request Sent!</h2>
             </div>
             
             <div className="modal-body">

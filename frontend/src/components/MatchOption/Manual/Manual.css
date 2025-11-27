@@ -285,6 +285,34 @@
   margin: 0;
 }
 
+/* New: Header with icon on right */
+.modal-header-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.modal-header-with-icon h2 {
+  font-size: 1.75rem;
+  color: #333;
+  margin: 0;
+  text-align: center;
+}
+
+.modal-icon-right {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-icon-right.success {
+  color: #4caf50;
+}
+
 .modal-icon.success {
   color: #4caf50;
 }
