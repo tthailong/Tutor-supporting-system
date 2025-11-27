@@ -101,7 +101,49 @@ const weeklyAvailabilitySchema = new mongoose.Schema({
 // TUTOR SCHEMA
 // --------------------
 const tutorSchema = new mongoose.Schema({
+  // Link to User Account
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: false  // Optional for backward compatibility
+  },
+  
   name: { type: String, required: true },
+  phone: { type: String, required: true },
+  expertise: { type: [String], required: true },
+  description: { type: String },
+  
+  // New fields for matching algorithm
+  bio: {
+    type: String,
+    maxlength: 500,
+    trim: true
+  },
+  
+  rating: {
+    type: Number,
+    default: 5.0,
+    min: 0,
+    max: 5,
+    validate: {
+      validator: function(value) {
+        return value >= 0 && value <= 5;
+      },
+      message: "Rating must be between 0 and 5"
+    }
+  },
+  
+  totalSessions: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  
+  activeStudents: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
 
   availability: {
     type: weeklyAvailabilitySchema,
@@ -115,6 +157,52 @@ const tutorSchema = new mongoose.Schema({
     }
   }
 });
+
+
+// --------------------
+// INDEXES for Query Optimization
+// --------------------
+tutorSchema.index({ expertise: 1, rating: -1 });  // Compound index for filtering
+tutorSchema.index({ rating: -1 });                // For sorting by rating
+tutorSchema.index({ userId: 1 });                 // For user lookup
+
+
+// --------------------
+// VIRTUAL FIELDS
+// --------------------
+
+// Calculate workload score (lower is better for matching)
+tutorSchema.virtual("workloadScore").get(function() {
+  return this.activeStudents;
+});
+
+
+// --------------------
+// INSTANCE METHODS
+// --------------------
+
+// Update rating based on new session feedback
+tutorSchema.methods.updateRating = function(newRating) {
+  const totalRatings = this.totalSessions;
+  if (totalRatings === 0) {
+    this.rating = newRating;
+  } else {
+    this.rating = ((this.rating * totalRatings) + newRating) / (totalRatings + 1);
+  }
+};
+
+// Increment active students count
+tutorSchema.methods.incrementActiveStudents = function() {
+  this.activeStudents += 1;
+};
+
+// Decrement active students count
+tutorSchema.methods.decrementActiveStudents = function() {
+  if (this.activeStudents > 0) {
+    this.activeStudents -= 1;
+  }
+};
+
 
 // --------------------
 // EXPORT MODEL
