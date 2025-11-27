@@ -1,89 +1,84 @@
-/*// Ví dụ logic trong Node/Express Controller
-// (Giả sử: const frontendAvailability = req.body;)
+import express from "express";
+import mongoose from "mongoose";
+import Tutor from "../models/tutorModel.js";
+import Session from "../models/sessionModel.js";
 
-const finalSchedule = Object.entries(frontendAvailability)
-    .filter(([key, value]) => value === true) // 1. Lọc: Chỉ giữ lại các slot đã chọn (true)
-    .map(([key, value]) => {
-        // 2. Tách chuỗi: 'Mon-10:00-11:00' => ['Mon', '10:00-11:00']
-        const [day, timeSlot] = key.split('-');
-        
-        // 3. Chuyển đổi: Trả về đối tượng nhúng
-        return {
-            dayOfWeek: day, // 'Mon' (Backend cần chuyển thành 'Monday' nếu Schema yêu cầu)
-            timeSlot: timeSlot
-        };
-    });
-
-// Kết quả finalSchedule: 
-/*
-[
-    { dayOfWeek: 'Mon', timeSlot: '10:00-11:00' },
-    { dayOfWeek: 'Mon', timeSlot: '13:00-14:00' },
-    ...
-]
-
-function isSlotAvailable(tutorAvailability, sessionSlot) {
-  const daySlots = tutorAvailability[sessionSlot.day]; // e.g., Mon: [{start, end}, ...]
-
-  if (!daySlots || daySlots.length === 0) return false; // no availability on that day
-
-  // Convert "HH:MM" → number for comparison
-  const sessionStart = Number(sessionSlot.start.replace(":", ""));
-  const sessionEnd = Number(sessionSlot.end.replace(":", ""));
-
-  // Check if session fits inside any of the available slots
-  return daySlots.some(slot => {
-    const slotStart = Number(slot.start.replace(":", ""));
-    const slotEnd = Number(slot.end.replace(":", ""));
-    return sessionStart >= slotStart && sessionEnd <= slotEnd;
-  });
-
-*/
-
-
-import sessionModel from "../models/sessionModel.js";
-import fs from "fs"; //for file handling
-
-const createSession = async (req, res) => {
-  console.log("req.body:", req.body); // check what's actually received
-  
-  //if (!req.body || !req.body.name) {
-  //  return res.status(400).json({ success: false, message: "Missing fields" });
-  //}
-
-    const session = new sessionModel({
-        name: req.body.name,
-        location: req.body.location,
-        //timeTable: req.body.timeTable,
-        duration: req.body.duration,
-        capacity: req.body.capacity,
-    });
-    try {
-        await session.save();
-        res.json({success: true, message: "Session created successfully"});
-    } catch (error) {
-        console.log(error);
-        res.json({success: false, message: "Error"});
-    }
-}
-
-/* this is for count student who register program
-    async function getRegisteredCount(sessionId) {
+// --------------------
+// CREATE SESSION CONTROLLER
+// --------------------
+export const createSession = async (req, res) => {
   try {
-    const session = await Session.findById(sessionId)
-      .select('students') // Only fetch the students array
-      .exec();
+    const {
+      tutorId,
+      subject,
+      location,
+      startDate,   // first date of session
+      duration,    // in weeks
+      timeTable,   // array of slots [{day, start, end}, ...]
+      capacity
+    } = req.body;
 
-    if (!session) {
-      return 0; // Or throw an error if the session is not found
+    // --- 1. Find tutor ---
+    const tutor = await Tutor.findById(tutorId);
+    if (!tutor) {
+      return res.status(404).json({ message: "Tutor not found" });
     }
 
-    // The count is the length of the array of student IDs
-    const studentCount = session.students.length;
-    return studentCount;
+    // --- 2. Validate all requested slots against tutor availability ---
+    const isAllSlotsAvailable = timeTable.every(slot => {
+      const availableSlots = tutor.availability[slot.day] || [];
+      const slotStart = Number(slot.start.replace(":", ""));
+      const slotEnd = Number(slot.end.replace(":", ""));
+      return availableSlots.some(av => {
+        const avStart = Number(av.start.replace(":", ""));
+        const avEnd = Number(av.end.replace(":", ""));
+        return slotStart >= avStart && slotEnd <= avEnd;
+      });
+    });
+
+    if (!isAllSlotsAvailable) {
+      return res.status(400).json({ message: "One or more requested time slots are outside tutor availability" });
+    }
+
+    // --- 3. Check for conflicts with tutor's bookedSlots ---
+    const tempSession = new Session({ startDate, duration, timeTable });
+    const hasConflict = tempSession.hasConflict(tutor.bookedSlots || []);
+    if (hasConflict) {
+      return res.status(400).json({ message: "Requested time conflicts with existing booked sessions" });
+    }
+
+    // --- 4. Create new session ---
+    const newSession = new Session({
+      subject,
+      tutor: tutor._id,
+      location,
+      startDate,
+      duration,
+      timeTable,
+      capacity
+    });
+
+    await newSession.save();
+
+    // --- 5. Add booked slots to tutor ---
+    const sessionDates = newSession.generateSessionDates();
+    const bookedEntries = sessionDates.map(slot => ({
+      date: slot.date,
+      startTime: slot.start,
+      endTime: slot.end,
+      sessionId: newSession._id
+    }));
+
+    tutor.bookedSlots.push(...bookedEntries);
+    await tutor.save();
+
+    return res.status(201).json({
+      message: "Session created successfully",
+      session: newSession
+    });
+
   } catch (error) {
-    console.error("Error fetching student count:", error);
-    throw error;
+    console.error(error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
-} */
-export { createSession }; 
+};

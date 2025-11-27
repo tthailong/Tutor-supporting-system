@@ -14,19 +14,16 @@ const timeEnum = [
 function hasOverlap(slots) {
   if (!Array.isArray(slots)) return false;
 
-  // Convert "HH:MM" to number (e.g., "13:00" → 1300)
   const parsed = slots.map(s => ({
     start: Number(s.start.replace(":", "")),
     end: Number(s.end.replace(":", ""))
   }));
 
-  // Sort by start time
   parsed.sort((a, b) => a.start - b.start);
 
-  // Check adjacent for overlap
   for (let i = 1; i < parsed.length; i++) {
     if (parsed[i].start < parsed[i - 1].end) {
-      return true; // overlapped
+      return true;
     }
   }
 
@@ -36,7 +33,7 @@ function hasOverlap(slots) {
 // --------------------
 // TIME SLOT SCHEMA
 // --------------------
-export const timeSlotSchema = new mongoose.Schema({
+const timeSlotSchema = new mongoose.Schema({
   start: {
     type: String,
     enum: timeEnum,
@@ -48,13 +45,12 @@ export const timeSlotSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: function (value) {
-        // end must be > start
         return Number(value.replace(":", "")) > Number(this.start.replace(":", ""));
       },
       message: "endTime must be greater than startTime"
     }
   }
-});
+}, { _id: false });
 
 // --------------------
 // WEEKLY AVAILABILITY SCHEMA
@@ -95,7 +91,21 @@ const weeklyAvailabilitySchema = new mongoose.Schema({
       message: "Friday timeslots overlap"
     }
   }
-});
+}, { _id: false });
+
+// --------------------
+// BOOKED SLOT SCHEMA (ACTUAL SESSIONS)
+// --------------------
+const bookedSlotSchema = new mongoose.Schema({
+  date: { type: Date, required: true },
+  startTime: { type: String, required: true },
+  endTime: { type: String, required: true },
+  sessionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Session",
+    required: true
+  }
+}, { _id: false });
 
 // --------------------
 // TUTOR SCHEMA
@@ -145,6 +155,7 @@ const tutorSchema = new mongoose.Schema({
     min: 0
   },
 
+  // Weekly recurring availability
   availability: {
     type: weeklyAvailabilitySchema,
     required: true,
@@ -155,6 +166,12 @@ const tutorSchema = new mongoose.Schema({
       Thu: [],
       Fri: []
     }
+  },
+
+  // Actual booked sessions
+  bookedSlots: {
+    type: [bookedSlotSchema],
+    default: []
   }
 });
 
@@ -207,5 +224,5 @@ tutorSchema.methods.decrementActiveStudents = function() {
 // --------------------
 // EXPORT MODEL
 // --------------------
-const tutorModel = mongoose.model("Tutor", tutorSchema);
+const tutorModel = mongoose.models.Tutor || mongoose.model("Tutor", tutorSchema);
 export default tutorModel;
