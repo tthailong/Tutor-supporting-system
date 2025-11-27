@@ -1,7 +1,7 @@
 .tutorviewsessions-container {
     display: flex;
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #fff;
     position: relative; /* for absolute positioning of Sessioncard */
 }
@@ -9,14 +9,6 @@
 /* Sidebar fixed on the left */
 .tutorviewsessions-container > .sidebar {
     width: 250px; 
-    height: 100%;
+    min-height: 100%;
     flex-shrink: 0;
-}
-
-/* SessionCard wrapper centered horizontally */
-.tutorviewsessions-container > .session-card-wrapper {
-    position: absolute;
-    left: 50%;           /* move left edge to center */
-    transform: translateX(-50%); /* truly center the content */
-    top: 50px;           /* optional: distance from top */
 }

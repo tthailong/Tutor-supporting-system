@@ -1,14 +1,21 @@
 /* Main container for the "My sessions" box */
+
 .session-list-container {
-    background-color: #f8f8fc; /* Light gray background */
+    background-color: #f8f8fc;
+    /* Light gray background */
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    max-width: 800px; /* Constrain the size as seen in the image */
-    margin: 20px auto; /* Center the component */
-    position: absolute;
-    left: 50%;           /* move left edge to center */
-    transform: translateX(-50%); /* truly center the content */
+    max-width: 800px;
+    /* Constrain the size as seen in the image */
+    margin: 20px auto;
+    /* Center the component */
+    position: relative;
+    left: 50%;
+    /* move left edge to center */
+    transform: none;
+    /* truly center the content */
+    padding-bottom: 100px;
 }
 
 /* Title styling */
@@ -31,7 +38,8 @@
 /* Wrapper to control the width of the search bar */
 .search-bar-wrapper {
     flex-grow: 1;
-    max-width: 300px; /* Adjust as needed */
+    max-width: 300px;
+    /* Adjust as needed */
     position: relative;
 }
 
@@ -47,6 +55,7 @@
     display: flex;
     gap: 10px;
 }
+
 
 .filter-button {
     padding: 10px 15px;
@@ -68,7 +77,8 @@
 .add-session-button {
     padding: 10px 15px;
     border: none;
-    background-color: #38a169; /* Green color for action button */
+    background-color: #38a169;
+    /* Green color for action button */
     color: white;
     border-radius: 5px;
     cursor: pointer;
@@ -85,19 +95,21 @@
 .session-cards-list {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Spacing between cards */
+    gap: 15px;
+    /* Spacing between cards */
 }
 
 .filter-buttons select {
     border: none;
     border: 1px solid #ddd;
-    padding: 5px 10px;
+    padding: 9px 9px;
     border-radius: 6px;
     font-size: 14px;
-    outline: none; /* remove default focus border */
+    outline: none;
+    /* remove default focus border */
     transition: background-color 0.2s;
 }
-  
+
 .filter-buttons select:hover {
     background-color: #f0f0f0;
     border-color: #ccc;
@@ -125,12 +137,12 @@
         max-width: 100%;
         margin-bottom: 10px;
     }
-    
+
     .controls-right {
         justify-content: space-between;
         gap: 10px;
     }
-    
+
     .filter-buttons {
         flex-grow: 1;
         justify-content: flex-start;

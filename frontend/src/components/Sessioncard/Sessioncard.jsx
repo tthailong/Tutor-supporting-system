@@ -4,58 +4,34 @@ import RatingDisplay from './RatingDisplay';
 import FeedbackForm from './FeedbackForm';
 import ProgressTracker from './ProgressTracker';
 
-// Cập nhật MOCK_SESSION_DATA trong Sessioncard.jsx
-
-
-const handleReschedule = (s) => console.log(`Reschedule session ${s.id}`);
-const handleEdit = (s) => console.log(`Edit session ${s.id}`);
-const handleDelete = (s) => console.log(`Delete session ${s.id}`);
-
-// NEW: State management component
-const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit }) => {
+const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDelete }) => {
+  // Sync state with props when parent re-renders (e.g. after list refresh)
   const [session, setSession] = React.useState(sessionData);
-  
   const [showFeedbackForm, setShowFeedbackForm] = React.useState(false);
   const [showProgressTracker, setShowProgressTracker] = React.useState(false);
 
-  // NEW: Feedback submission handler
-  const handleFeedbackSubmit = (feedbackData) => {
-    console.log('Feedback submitted:', feedbackData);
-    setSession({
-      ...session,
-      studentFeedback: feedbackData
-    });
-    setShowFeedbackForm(false);
-  };
+  React.useEffect(() => {
+    setSession(sessionData);
+  }, [sessionData]);
 
-  // NEW: Progress save handler
-  const handleProgressSave = (progressData) => {
-    console.log('Progress saved:', progressData);
-    setSession({
-      ...session,
-      tutorProgress: progressData
-    });
-    setShowProgressTracker(false);
-  };
-
-  const { title, time, location, capacity, signedUp, studentFeedback, tutorProgress } = session;
+  // Safe defaults
+  const studentFeedback = session.studentFeedback || { submitted: false, rating: 0 };
+  const tutorProgress = session.tutorProgress || { lastUpdated: null };
+  const { title, time, location, capacity, signedUp } = session;
 
   return (
     <div className="session-card">
       <div className="session-details-container">
         <div className="session-details-left">
-          <div className="title">{title}</div>
-          <div className="subtitle-line">
-            <div className="time-and-location">
-              <span>{time}</span>
-              <span>{location}</span>
-            </div>
-            <div className="capacity">
-              {signedUp}/{capacity}
-            </div>
-          </div>
-
-          {/* NEW: Feedback Section */}
+           <div className="title">{title}</div>
+           <div className="subtitle-line">
+             <div className="time-and-location">
+               <span>{time}</span> <span>{location}</span>
+             </div>
+             <div className="capacity">{signedUp}/{capacity}</div>
+           </div>
+           
+                     {/* NEW: Feedback Section */}
           <div className="feedback-section">
             {role === 'student' && (
               <div className="student-feedback">
@@ -115,6 +91,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit }) => {
             )}
           </div>
         </div>
+        
 
         <div className="action-icons">
           {/* NEW: Add feedback icon for students */}
@@ -137,7 +114,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit }) => {
               <span onClick={() => onEdit?.(session)} title="Edit">
                 ✏️
               </span>
-              <span onClick={() => handleDelete(session)} title="Delete">
+              <span onClick={() => onDelete?.(session)} title="Delete">
                 🗑️
               </span>
             </>
@@ -166,16 +143,15 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit }) => {
   );
 }
 
-// Keep the original component for backward compatibility
-const Sessioncard = ({ data, role = 'student', onEdit }) => {
+const Sessioncard = ({ data, role = 'student', onEdit, onDelete }) => {
   return (
     <SessioncardWithFeedback 
       sessionData={data}
       role={role}
       onEdit={onEdit}
+      onDelete={onDelete}
     />
   );
 };
 
-
-export default Sessioncard
+export default Sessioncard;
