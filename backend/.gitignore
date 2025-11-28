@@ -1,4 +1,4 @@
-
+*.log
 # nyc test coverage
 .nyc_output
 
