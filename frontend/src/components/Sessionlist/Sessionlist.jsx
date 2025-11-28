@@ -7,7 +7,6 @@ import Sessionform from '../Sessionform/Sessionform';
 const user = JSON.parse(localStorage.getItem("user"));
 const TUTOR_ID = user?.tutorProfile;
 
-
 const API_URL = "http://localhost:4000/api/session";
 
 const getFirstSessionTime = (scheduleMap) => {
@@ -35,7 +34,6 @@ const getFirstSessionTime = (scheduleMap) => {
   return `${day} ${firstSlot.start} - ${firstSlot.end}`;
 };
 
-
 const Sessionlist = ({ role = 'tutor' }) => {
   const [sessions, setSessions] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -49,10 +47,11 @@ const Sessionlist = ({ role = 'tutor' }) => {
       const data = await res.json();
       console.log("RAW backend data:", data);   // ⬅️ See exactly what backend returns
       if (data.success) {
-        setSessions(data.sessions);
+        setSessions(data.data || []);
       }
     } catch (error) {
       console.error("Fetch error:", error);
+      setSessions([]);
     }
   };
 
@@ -110,7 +109,6 @@ const Sessionlist = ({ role = 'tutor' }) => {
             duration: parseInt(formData.duration),
             capacity: parseInt(formData.capacity),
             description: formData.description,
-            // ✅ Send the required schedule Map object
             schedule: scheduleMapObject
         };
 
@@ -129,14 +127,16 @@ const Sessionlist = ({ role = 'tutor' }) => {
                 delete payload.schedule;
                 delete payload.startDate;
                 delete payload.duration;
+                delete payload.subject;
             }
         }
 
+        const token = localStorage.getItem('token');
         const res = await fetch(url, {
             method: method,
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
+              ...(token && { "Authorization": `Bearer ${token}` })
             },
             body: JSON.stringify(payload)
         });
@@ -145,6 +145,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
         if (res.ok) {
             alert(currentSession ? "Session updated!" : "Session created!");
             setIsFormOpen(false);
+            setCurrentSession(null);
             fetchSessions();
         } else {
             alert("Error: " + data.message);
@@ -158,7 +159,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
   // 4. Prepare Edit Form
   const handleEditClick = (session) => {
     // Get the explicit date key from the schedule map
-    const scheduleKeys = Object.keys(session.schedule).sort();
+    const scheduleKeys = Object.keys(session.schedule || {}).sort();
     const firstDateString = scheduleKeys.length > 0 ? scheduleKeys[0] : null;
 
     // Get the slots for that date
@@ -173,10 +174,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
         duration: session.duration,
         description: session.description,
         studentCount: session.students ? session.students.length : 0,
-        
-        // ✅ NEW: Pass the date string directly
         startDate: firstDateString, 
-        // We no longer need dayOfWeek in the UI structure
         timeSlots: timeSlots 
     };
 
@@ -215,34 +213,31 @@ const Sessionlist = ({ role = 'tutor' }) => {
           </div>
         </div>
 
-        {filteredSessions.map(session => (
-          <Sessioncard
-            key={session._id}
-            data={{ 
-              title: `${session.subject}`, 
-              // ❌ OLD CRASHING LINE: time: session.timeTable[0] ? ...
-              
-              // ✅ NEW LINE: Use the helper to process the new schedule Map
-              time: getFirstSessionTime(session.schedule) || "N/A", 
-              
-              signedUp: session.students ? session.students.length : 0,
-              
-              // FIX: Add default empty arrays for the Edit form data structure
-              timeTable: [], // Pass an empty timeTable array to prevent crashing the Edit form handler (handleEditClick)
-              
-              ...session 
-            }}
-            role={role}
-            onEdit={() => handleEditClick(session)}
-            onDelete={() => handleDeleteSession(session)}
-          />
-        ))}
+        {filteredSessions.length === 0 ? (
+          <p className="no-sessions">No sessions found.</p>
+        ) : (
+          filteredSessions.map(session => (
+            <Sessioncard
+              key={session._id}
+              data={{ 
+                title: `${session.subject}`, 
+                time: getFirstSessionTime(session.schedule) || "N/A", 
+                signedUp: session.students ? session.students.length : 0,
+                timeTable: [],
+                ...session 
+              }}
+              role={role}
+              onEdit={() => handleEditClick(session)}
+              onDelete={() => handleDeleteSession(session)}
+            />
+          ))
+        )}
       </div>
 
       {role === 'tutor' && (
         <Sessionform
           isOpen={isFormOpen} 
-          onClose={() => setIsFormOpen(false)} 
+          onClose={() => { setIsFormOpen(false); setCurrentSession(null); }} 
           onSave={handleSave}
           sessionData={currentSession}
         />
@@ -251,4 +246,4 @@ const Sessionlist = ({ role = 'tutor' }) => {
   );
 }
 
-export default Sessionlist;
+export default Sessionlist; 

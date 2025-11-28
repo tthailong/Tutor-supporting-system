@@ -153,7 +153,7 @@ export const getSessionsByTutor = async (req, res) => {
   try {
     const { tutorId } = req.params;
     const sessions = await Session.find({ tutor: tutorId })
-      .populate('students', 'fullname email')
+      .populate('students', 'name email')
       .sort({ startDate: 1 });
 
     // Return in consistent format with 'data' field
