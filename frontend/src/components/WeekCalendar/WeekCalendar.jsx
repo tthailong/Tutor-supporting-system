@@ -7,7 +7,13 @@ const TIME_SLOTS = [
 ];
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-const TUTOR_ID = "692581debde6cb4c8d1888a6";
+//const TUTOR_ID = "692918f2362827e136cb714f";
+const user = JSON.parse(localStorage.getItem("user"));
+const TUTOR_ID = user?.tutorProfile
+console.log("TUTOR_ID:", TUTOR_ID);
+console.log("user from localStorage:", localStorage.getItem("user"));
+
+
 
 const WeekCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -22,15 +28,13 @@ const WeekCalendar = () => {
         const data = await res.json();
         
         if (data.success) {
-          setBookedSlots(data.bookedSlots);
+          setBookedSlots(data.bookedSlots || {});
           
           // Convert DB Availability Map to UI State keys
           const newAvailState = {};
           // data.availability is object: { "2025-11-26": [{start: "07:00"...}] }
-          Object.entries(data.availability).forEach(([dateStr, slots]) => {
+          Object.entries(data.availability || {}).forEach(([dateStr, slots]) => {
             slots.forEach(slot => {
-               // Mark the start time as true (assuming 1 hour slots for simplicity)
-               // If you store 07:00-09:00, you might need a loop here to mark 07:00 and 08:00
                newAvailState[`${dateStr}-${slot.start}`] = true;
             });
           });
@@ -45,7 +49,6 @@ const WeekCalendar = () => {
   }, []);
   // --- Date Helpers ---
 
-  // Get the Monday of the current week based on currentDate state
   const getStartOfWeek = (date) => {
     const day = date.getDay();
     const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
@@ -85,20 +88,34 @@ const WeekCalendar = () => {
   const handleJumpToToday = () => setCurrentDate(new Date());
 
   // Check if a specific slot is booked (GRAY Logic)
+  const timeToNumber = (timeStr) => {
+    const [h, m] = timeStr.split(":").map(Number);
+    return h + m / 60;
+  };
+  
+  // Correct booked check
   const checkIsBooked = (dateStr, timeStr) => {
-    // Convert timeStr "07:00" to comparison format if needed
-    // Assuming bookedSlots has specific dates and times
-    return bookedSlots.some(bs => {
-        // Only compare date string part
-        const bookedDate = new Date(bs.date).toISOString().split('T')[0];
-        // Check if date matches AND time falls within booked range
-        return bookedDate === dateStr && bs.startTime <= timeStr && timeStr < bs.endTime;
+    const daySlots = bookedSlots[dateStr];
+    if (!daySlots) return false;
+  
+    const t = timeToNumber(timeStr);
+  
+    return daySlots.some(slot => {
+      const start = timeToNumber(slot.start);
+      const end = timeToNumber(slot.end);
+      return start <= t && t < end;
     });
   };
 
-  const handleToggle = (date, time, isBooked) => {
-    if (isBooked) return;
+  const isPastSlot = (date, time) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    const slotDate = new Date(date);
+    slotDate.setHours(hours, minutes, 0, 0); // exact slot time
+    return slotDate < new Date();
+  };
 
+  const handleToggle = (date, time, isBooked) => {
+    if (isBooked || isPastSlot(date, time)) return; // cannot toggle booked or past
     const key = `${formatDateKey(date)}-${time}`;
     setAvailabilityState(prev => ({
       ...prev,
@@ -209,7 +226,7 @@ const WeekCalendar = () => {
   
     return result;
   };
-  
+
   
   return (
     <div className='app-container'>
@@ -259,7 +276,8 @@ const WeekCalendar = () => {
                 
                 const uiKey = key;
                 // 1. Check Gray (Booked)
-                const isBooked = checkIsBooked(key, time);
+                const isBooked = checkIsBooked(formatDateKey(date), time);
+
                 
                 // 2. Check Green (Available set by Tutor)
                 //const isSelected = availabilityState[uiKey];
@@ -276,7 +294,7 @@ const WeekCalendar = () => {
                     onClick={() => handleToggle(date, time, isBooked)}
                   >
                     <div>
-                      {isBooked && "Booked"}
+                      {isBooked}
                       {!isBooked && isSelected && <span className='check-icon'>✔</span>}
                     </div>
                   </div>

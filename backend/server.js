@@ -4,6 +4,7 @@ import { connectDB } from "./config/db.js"
 
 import sessionRouter  from "./routes/sessionRoute.js"
 import tutorRouter from "./routes/tutorRoute.js"
+import authRouter from "./routes/authRoute.js"
 import awardRouter from "./routes/awardRoute.js"
 
 import "dotenv/config.js"
@@ -21,8 +22,9 @@ app.use(cors())
 connectDB();
 
 //api routes
-app.use("/api/tutors", tutorRouter);
+app.use("/api/tutors", tutorRouter)
 app.use("/api/session",sessionRouter)
+app.use("/api/auth",authRouter)
 app.use("/api/awards", awardRouter);
 
 

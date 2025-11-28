@@ -1,129 +1,151 @@
 import mongoose from "mongoose";
-
+import User from "./User.js";
+import SessionEvaluation from "./sessionEvaluationModel.js";
+import StudentProgress from "./studentProgressModel.js";
 // --------------------
-// TIME ENUM (reuse your tutorModel timeEnum)
+// TIME ENUM (Same as Tutor)
+// --------------------
 const timeEnum = [
   "07:00","08:00","09:00","10:00","11:00",
-  "12:00","13:00","14:00","15:00","16:00","17:00","18:00"
+  "12:00","13:00","14:00","15:00","16:00","17:00"
 ];
+
+// --------------------
+// HELPER: Check Overlap
+// --------------------
+function hasOverlap(slots) {
+  if (!Array.isArray(slots)) return false;
+
+  const parsed = slots.map(s => ({
+    start: Number(s.start.replace(":", "")),
+    end: Number(s.end.replace(":", "")),
+  }));
+
+  parsed.sort((a, b) => a.start - b.start);
+
+  for (let i = 1; i < parsed.length; i++) {
+    if (parsed[i].start < parsed[i - 1].end) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// --------------------
+// TIME SLOT SCHEMA
+// --------------------
+const timeSlotSchema = new mongoose.Schema({
+  start: {
+    type: String,
+    enum: timeEnum,
+    required: true
+  },
+  end: {
+    type: String,
+    enum: timeEnum,
+    required: true,
+    validate: {
+      validator: function (value) {
+        return Number(value.replace(":", "")) > Number(this.start.replace(":", ""));
+      },
+      message: "endTime must be greater than startTime"
+    }
+  }
+}, { _id: false });
 
 // --------------------
 // SESSION SCHEMA
 // --------------------
 const sessionSchema = new mongoose.Schema({
   subject: { type: String, required: true },
-
-  tutor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Tutor",   // link to Tutor model
-    required: true
-  },
-
+  tutor: { type: mongoose.Schema.Types.ObjectId, ref: "Tutor", required: true },
   location: { type: String, required: true },
 
-  // Array of multiple slots (day + start + end)
-  timeTable: {
-    type: [{
-      day: {
-        type: String,
-        enum: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
-        required: true
-      },
-      start: {
-        type: String,
-        enum: timeEnum,
-        required: true
-      },
-      end: {
-        type: String,
-        enum: timeEnum,
-        required: true,
-        validate: {
-          validator: function(value) {
-            return Number(value.replace(":", "")) > Number(this.start.replace(":", ""));
-          },
-          message: "endTime must be greater than startTime"
-        }
-      }
-    }],
+  schedule: {
+    type: Map,
+    of: [timeSlotSchema], 
     required: true
   },
 
-  startDate: { type: Date, required: true },   // first date of session
-  duration: { type: Number, required: true },  // in weeks
-  capacity: { type: Number, required: true },
+  // Metadata
+  startDate: { type: Date, required: true }, // Useful for sorting
+  duration: { type: Number, required: true }, // in weeks
 
-  students: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User"
+  
+  capacity: { type: Number, required: true },
+  description: { type: String },
+
+  students: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],  //dummy, need to change to student later
+
+  evaluations: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "SessionEvaluation" 
   }],
 
-  status: {
-    type: String,
-    enum: ['Scheduled', 'Rescheduled', 'Completed', 'Cancelled'],
-    default: 'Scheduled'
-  },
+  studentProgress: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "StudentProgress" 
+  }],
+    status: {
+      type: String,
+      enum: ['Scheduled', 'Rescheduled', 'Completed', 'Cancelled'],
+      default: 'Scheduled'
+    }
 
-  studentCheckIn: { type: Date },
-  tutorCheckIn: { type: Date }
-}, {
-  timestamps: true
+}, { timestamps: true });
+
+// --------------------
+// PRE-SAVE: Check Overlap Per Date inside the Session itself
+// --------------------
+sessionSchema.pre("save", function (next) {
+  const schedule = this.schedule || new Map();
+
+  for (const [date, slots] of schedule.entries()) {
+    if (hasOverlap(slots)) {
+      return next(new Error(`Session schedule overlaps on ${date}`));
+    }
+  }
+
+  if (schedule.size > 0) {
+    const sortedDates = Array.from(schedule.keys()).sort();
+    this.startDate = new Date(sortedDates[0]); // First Key
+    this.endDate = new Date(sortedDates[sortedDates.length - 1]); // Last Key
+  }
+
+  next();
 });
 
 // --------------------
-// INSTANCE METHODS
+// METHOD: Get All Specific Dates
+// (Helper to easily extract dates for the Tutor BookedSlots update)
 // --------------------
+sessionSchema.methods.getSessionDates = function() {
+  const allBookings = [];
+  const schedule = this.schedule || new Map();
 
-// Generate all dates for each slot based on startDate + duration
-sessionSchema.methods.generateSessionDates = function() {
-  const allDates = [];
-  const start = new Date(this.startDate);
+  // Get the first date in schedule as reference
+  const sortedDates = Array.from(schedule.keys()).sort();
+  if (sortedDates.length === 0) return allBookings;
 
-  for (let week = 0; week < this.duration; week++) {
-    for (const slot of this.timeTable) {
-      // Calculate the actual date of this slot
-      const sessionDate = new Date(start);
-      const targetDayIndex = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(slot.day);
-      const startDayIndex = sessionDate.getDay(); // 0 = Sun, 1 = Mon
-      const dayDiff = (targetDayIndex - startDayIndex + 7) % 7 + week * 7;
-      sessionDate.setDate(sessionDate.getDate() + dayDiff);
+  const firstDate = new Date(sortedDates[0]);
+  const duration = this.duration || 1; // fallback 1 week
 
-      allDates.push({
-        date: sessionDate,
-        day: slot.day,
-        start: slot.start,
-        end: slot.end
+  for (let week = 0; week < duration; week++) {
+    for (const [dateString, slots] of schedule.entries()) {
+      const baseDate = new Date(dateString);
+      baseDate.setDate(baseDate.getDate() + 7 * week); // shift by week
+
+      slots.forEach(slot => {
+        allBookings.push({
+          date: new Date(baseDate),
+          start: slot.start,
+          end: slot.end
+        });
       });
     }
   }
-
-  return allDates;
+  return allBookings;
 };
 
-// Check for conflict with tutor's bookedSlots
-sessionSchema.methods.hasConflict = function(bookedSlots) {
-  const sessionDates = this.generateSessionDates();
-
-  for (const sessionSlot of sessionDates) {
-    const slotStart = Number(sessionSlot.start.replace(":", ""));
-    const slotEnd = Number(sessionSlot.end.replace(":", ""));
-    for (const booked of bookedSlots) {
-      const bookedDate = new Date(booked.date);
-      const bookedStart = Number(booked.startTime.replace(":", ""));
-      const bookedEnd = Number(booked.endTime.replace(":", ""));
-      if (bookedDate.toDateString() === sessionSlot.date.toDateString()) {
-        if (slotStart < bookedEnd && slotEnd > bookedStart) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
-};
-
-// --------------------
-// EXPORT MODEL
-// --------------------
 const sessionModel = mongoose.models.Session || mongoose.model("Session", sessionSchema);
 export default sessionModel;

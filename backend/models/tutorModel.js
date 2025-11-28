@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+//import User from "./userModel.js";
 
 // --------------------
 // TIME ENUM
@@ -56,9 +57,22 @@ const timeSlotSchema = new mongoose.Schema({
 // BOOKED SLOT SCHEMA
 // --------------------
 const bookedSlotSchema = new mongoose.Schema({
-  date: { type: Date, required: true },
-  startTime: { type: String, required: true },
-  endTime: { type: String, required: true },
+  start: {
+    type: String,
+    enum: timeEnum,
+    required: true
+  },
+  end: {
+    type: String,
+    enum: timeEnum,
+    required: true,
+    validate: {
+      validator: function (value) {
+        return Number(value.replace(":", "")) > Number(this.start.replace(":", ""));
+      },
+      message: "endTime must be greater than startTime"
+    }
+  },
   sessionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Session",
@@ -71,6 +85,12 @@ const bookedSlotSchema = new mongoose.Schema({
 // TUTOR SCHEMA
 // --------------------
 const tutorSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },  
+
   name: { type: String, required: true },
   phone: { type: String, required: true },
   expertise: { type: [String], required: true },
@@ -84,9 +104,11 @@ const tutorSchema = new mongoose.Schema({
   },
 
   bookedSlots: {
-    type: [bookedSlotSchema],
-    default: []
-  }
+    type: Map,
+    of: [bookedSlotSchema],
+    default: {}
+  },
+
 });
 
 
