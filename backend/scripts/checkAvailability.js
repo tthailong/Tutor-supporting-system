@@ -19,11 +19,15 @@ const checkTutorAvailability = async () => {
       console.log(`   Active Students: ${tutor.activeStudents}`);
       console.log(`   Availability:`);
       
-      if (tutor.availability) {
-        for (const [date, slots] of Object.entries(tutor.availability)) {
-          const dateObj = new Date(date);
-          const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dateObj.getDay()];
-          console.log(`     ${date} (${dayOfWeek}): ${JSON.stringify(slots)}`);
+      if (tutor.availability && tutor.availability instanceof Map) {
+        if (tutor.availability.size > 0) {
+          for (const [date, slots] of tutor.availability.entries()) {
+            const dateObj = new Date(date);
+            const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dateObj.getDay()];
+            console.log(`     ${date} (${dayOfWeek}): ${JSON.stringify(slots)}`);
+          }
+        } else {
+          console.log('     No availability set');
         }
       } else {
         console.log('     No availability set');

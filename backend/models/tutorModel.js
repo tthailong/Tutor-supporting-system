@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 // --------------------
 const timeEnum = [
   "07:00","08:00","09:00","10:00","11:00",
-  "12:00","13:00","14:00","15:00","16:00","17:00","18:00"
+  "12:00","13:00","14:00","15:00","16:00","17:00"
 ];
 
 // --------------------
@@ -16,7 +16,7 @@ function hasOverlap(slots) {
 
   const parsed = slots.map(s => ({
     start: Number(s.start.replace(":", "")),
-    end: Number(s.end.replace(":", ""))
+    end: Number(s.end.replace(":", "")),
   }));
 
   parsed.sort((a, b) => a.start - b.start);
@@ -26,7 +26,6 @@ function hasOverlap(slots) {
       return true;
     }
   }
-
   return false;
 }
 
@@ -52,54 +51,27 @@ const timeSlotSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
-// --------------------
-// WEEKLY AVAILABILITY SCHEMA
-// --------------------
-const weeklyAvailabilitySchema = new mongoose.Schema({
-  Mon: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Monday timeslots overlap"
-    }
-  },
-  Tue: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Tuesday timeslots overlap"
-    }
-  },
-  Wed: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Wednesday timeslots overlap"
-    }
-  },
-  Thu: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Thursday timeslots overlap"
-    }
-  },
-  Fri: {
-    type: [timeSlotSchema],
-    validate: {
-      validator: (slots) => !hasOverlap(slots),
-      message: "Friday timeslots overlap"
-    }
-  }
-}, { _id: false });
 
 // --------------------
-// BOOKED SLOT SCHEMA (ACTUAL SESSIONS)
+// BOOKED SLOT SCHEMA
 // --------------------
 const bookedSlotSchema = new mongoose.Schema({
-  date: { type: Date, required: true },
-  startTime: { type: String, required: true },
-  endTime: { type: String, required: true },
+  start: {
+    type: String,
+    enum: timeEnum,
+    required: true
+  },
+  end: {
+    type: String,
+    enum: timeEnum,
+    required: true,
+    validate: {
+      validator: function (value) {
+        return Number(value.replace(":", "")) > Number(this.start.replace(":", ""));
+      },
+      message: "endTime must be greater than startTime"
+    }
+  },
   sessionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Session",
@@ -107,15 +79,16 @@ const bookedSlotSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+
 // --------------------
 // TUTOR SCHEMA
 // --------------------
 const tutorSchema = new mongoose.Schema({
-  // Link to User Account
+  // Link to User account
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: false  // Optional for backward compatibility
+    required: false  // Optional for backwards compatibility
   },
   
   name: { type: String, required: true },
@@ -123,94 +96,77 @@ const tutorSchema = new mongoose.Schema({
   expertise: { type: [String], required: true },
   description: { type: String },
   
-  // New fields for matching algorithm
+  // Matching module fields
   bio: {
     type: String,
-    maxlength: 500,
-    trim: true
+    default: ""
   },
-  
   rating: {
     type: Number,
     default: 5.0,
     min: 0,
-    max: 5,
-    validate: {
-      validator: function(value) {
-        return value >= 0 && value <= 5;
-      },
-      message: "Rating must be between 0 and 5"
-    }
+    max: 5
   },
-  
   totalSessions: {
     type: Number,
     default: 0,
     min: 0
   },
-  
   activeStudents: {
     type: Number,
     default: 0,
     min: 0
   },
 
-  // Weekly recurring availability
+  // Key-based dynamic availability: "YYYY-MM-DD": [timeslots]
   availability: {
-    type: weeklyAvailabilitySchema,
-    required: true,
-    default: {
-      Mon: [],
-      Tue: [],
-      Wed: [],
-      Thu: [],
-      Fri: []
-    }
+    type: Map,
+    of: [timeSlotSchema],
+    default: {}
   },
 
-  // Actual booked sessions
   bookedSlots: {
-    type: [bookedSlotSchema],
-    default: []
+    type: Map,
+    of: [bookedSlotSchema],
+    default: {}
   }
 });
 
 
 // --------------------
-// INDEXES for Query Optimization
+// PRE-SAVE: Check Overlap Per Date
 // --------------------
-tutorSchema.index({ expertise: 1, rating: -1 });  // Compound index for filtering
-tutorSchema.index({ rating: -1 });                // For sorting by rating
-tutorSchema.index({ userId: 1 });                 // For user lookup
+tutorSchema.pre("save", function (next) {
+  const availability = this.availability || new Map();
 
+  for (const [date, slots] of availability.entries()) {
+    if (hasOverlap(slots)) {
+      return next(new Error(`Time slots overlap on ${date}`));
+    }
+  }
 
-// --------------------
-// VIRTUAL FIELDS
-// --------------------
-
-// Calculate workload score (lower is better for matching)
-tutorSchema.virtual("workloadScore").get(function() {
-  return this.activeStudents;
+  next();
 });
 
-
 // --------------------
-// INSTANCE METHODS
+// INSTANCE METHODS (for matching module)
 // --------------------
 
-// Update rating based on new session feedback
+// Update tutor rating
 tutorSchema.methods.updateRating = function(newRating) {
-  const totalRatings = this.totalSessions;
-  if (totalRatings === 0) {
-    this.rating = newRating;
-  } else {
+  const totalRatings = this.totalSessions || 0;
+  if (totalRatings > 0) {
     this.rating = ((this.rating * totalRatings) + newRating) / (totalRatings + 1);
+  } else {
+    this.rating = newRating;
   }
+  return this.rating;
 };
 
 // Increment active students count
 tutorSchema.methods.incrementActiveStudents = function() {
-  this.activeStudents += 1;
+  this.activeStudents = (this.activeStudents || 0) + 1;
+  return this.activeStudents;
 };
 
 // Decrement active students count
@@ -218,6 +174,7 @@ tutorSchema.methods.decrementActiveStudents = function() {
   if (this.activeStudents > 0) {
     this.activeStudents -= 1;
   }
+  return this.activeStudents;
 };
 
 

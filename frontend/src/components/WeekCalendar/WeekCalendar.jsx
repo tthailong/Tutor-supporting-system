@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './WeekCalendar.css';
 
 const TIME_SLOTS = [
@@ -7,14 +7,42 @@ const TIME_SLOTS = [
 ];
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+const TUTOR_ID = "692918f2362827e136cb714f";
 
 const WeekCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [availability, setAvailability] = useState({});
+  const [availabilityState, setAvailabilityState] = useState({});
+  const [bookedSlots, setBookedSlots] = useState([]);
 
+  // --- 1. Fetch Data on Mount ---
+  useEffect(() => {
+    const fetchTutorData = async () => {
+      try {
+        const res = await fetch(`http://localhost:4000/api/tutors/${TUTOR_ID}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          setBookedSlots(data.bookedSlots || {});
+          
+          // Convert DB Availability Map to UI State keys
+          const newAvailState = {};
+          // data.availability is object: { "2025-11-26": [{start: "07:00"...}] }
+          Object.entries(data.availability || {}).forEach(([dateStr, slots]) => {
+            slots.forEach(slot => {
+               newAvailState[`${dateStr}-${slot.start}`] = true;
+            });
+          });
+          setAvailabilityState(newAvailState);
+        }
+      } catch (error) {
+        console.error("Error fetching tutor data:", error);
+      }
+    };
+
+    fetchTutorData();
+  }, []);
   // --- Date Helpers ---
 
-  // Get the Monday of the current week based on currentDate state
   const getStartOfWeek = (date) => {
     const day = date.getDay();
     const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
@@ -53,23 +81,101 @@ const WeekCalendar = () => {
 
   const handleJumpToToday = () => setCurrentDate(new Date());
 
-  const handleToggle = (date, time) => {
+  // Check if a specific slot is booked (GRAY Logic)
+  const timeToNumber = (timeStr) => {
+    const [h, m] = timeStr.split(":").map(Number);
+    return h + m / 60;
+  };
+  
+  // Correct booked check
+  const checkIsBooked = (dateStr, timeStr) => {
+    const daySlots = bookedSlots[dateStr];
+    if (!daySlots) return false;
+  
+    const t = timeToNumber(timeStr);
+  
+    return daySlots.some(slot => {
+      const start = timeToNumber(slot.start);
+      const end = timeToNumber(slot.end);
+      return start <= t && t < end;
+    });
+  };
+
+  const isPastSlot = (date, time) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    const slotDate = new Date(date);
+    slotDate.setHours(hours, minutes, 0, 0); // exact slot time
+    return slotDate < new Date();
+  };
+
+  const handleToggle = (date, time, isBooked) => {
+    if (isBooked || isPastSlot(date, time)) return; // cannot toggle booked or past
     const key = `${formatDateKey(date)}-${time}`;
-    setAvailability(prev => ({
+    setAvailabilityState(prev => ({
       ...prev,
       [key]: !prev[key],
     }));
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting:', availability);
-    alert('Schedule saved to console!');
-  };
+  const handleSubmit = async () => {
+    const availabilityPayload = compressSlots(availabilityState, weekDays);
+  
+    const payload = {
+      tutorId: TUTOR_ID, 
+      availability: availabilityPayload
+    };
+  
+    console.log("Submitting:", payload);
+  
+    const res = await fetch("http://localhost:4000/api/tutors/availability", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  
+    const data = await res.json();
+  
+    if (res.ok) {
+      alert("Availability updated!");
+    } else {
+      alert("Error: " + data.message);
+    }
+  };  
 
   const handleDelete = () => {
     if(window.confirm("Clear all selections?")) {
-      setAvailability({});
+      setAvailabilityState({});
     }
+  };
+
+  // --- Data Transformation for Submit ---
+  const preparePayload = () => {
+    const result = {};
+
+    weekDays.forEach(date => {
+      const dateKey = formatDateKey(date);
+      const daySlots = [];
+
+      TIME_SLOTS.forEach(time => {
+        const uiKey = `${dateKey}-${time}`;
+        // If Green (true in state) AND not booked
+        if (availabilityState[uiKey]) {
+            // Find next hour for end time (Simple 1 hour logic)
+            const timeIndex = TIME_SLOTS.indexOf(time);
+            let endTime = TIME_SLOTS[timeIndex + 1];
+            // Handle last slot case (17:00 -> 18:00)
+            if(!endTime) endTime = (parseInt(time.split(':')[0]) + 1) + ":00";
+
+            daySlots.push({ start: time, end: endTime });
+        }
+      });
+
+      if (daySlots.length > 0) {
+        result[dateKey] = daySlots;
+      }
+    });
+
+    return result;
   };
 
   // --- Render Variables ---
@@ -77,6 +183,45 @@ const WeekCalendar = () => {
   const startOfWeekStr = formatHeaderDate(weekDays[0]);
   const endOfWeekStr = formatHeaderDate(weekDays[4]);
 
+  const compressSlots = (availabilityState, weekDays) => {
+    const result = {};
+  
+    weekDays.forEach(date => {
+      const dateKey = formatDateKey(date);
+      const slots = [];
+  
+      let currentStart = null;
+  
+      TIME_SLOTS.forEach((slot, idx) => {
+        const key = `${dateKey}-${slot}`;
+        const isSelected = availabilityState[key] === true;
+  
+        if (isSelected && currentStart === null) {
+          // Start block
+          currentStart = slot;
+        }
+  
+        const nextSlot = TIME_SLOTS[idx + 1];
+        const nextKey = `${dateKey}-${nextSlot}`;
+        const nextSelected = availabilityState[nextKey] === true;
+  
+        if (currentStart !== null && (!nextSelected || !nextSlot)) {
+          // End block
+          const end = nextSlot || slot;
+          slots.push({ start: currentStart, end });
+          currentStart = null;
+        }
+      });
+  
+      if (slots.length > 0) {
+        result[dateKey] = slots;
+      }
+    });
+  
+    return result;
+  };
+
+  
   return (
     <div className='app-container'>
       <div className='calendar-card'>
@@ -122,16 +267,29 @@ const WeekCalendar = () => {
               
               {weekDays.map((date) => {
                 const key = `${formatDateKey(date)}-${time}`;
-                const isSelected = availability[key];
                 
+                const uiKey = key;
+                // 1. Check Gray (Booked)
+                const isBooked = checkIsBooked(formatDateKey(date), time);
+
+                
+                // 2. Check Green (Available set by Tutor)
+                //const isSelected = availabilityState[uiKey];
+                const isSelected = availabilityState[uiKey];
+                let cellClass = 'slot-cell';
+                if (isBooked) cellClass += ' booked'; // Gray
+                else if (isSelected) cellClass += ' selected'; // Green
+                // else White
+
                 return (
                   <div 
-                    key={key} 
-                    className={`slot-cell ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleToggle(date, time)}
+                    key={uiKey} 
+                    className={cellClass}
+                    onClick={() => handleToggle(date, time, isBooked)}
                   >
-                    <div className='slot-content'>
-                      {isSelected && <span className='check-icon'>✔</span>}
+                    <div>
+                      {isBooked}
+                      {!isBooked && isSelected && <span className='check-icon'>✔</span>}
                     </div>
                   </div>
                 );

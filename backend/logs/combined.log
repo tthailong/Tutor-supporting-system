@@ -180,3 +180,10 @@
 {"level":"info","message":"Notifying coordinator for review","reason":"Best match score (7) below threshold","registrationId":"6928aaca413d95168d4e4acd","timestamp":"2025-11-28 02:47:23"}
 {"level":"info","message":"Notifying student of coordinator review","registrationId":"6928aaca413d95168d4e4acd","studentId":"69285ff4fcc2424d7f1b9234","timestamp":"2025-11-28 02:47:23"}
 {"bestScore":7,"level":"warn","message":"Auto-match failed - score below threshold","studentId":"69285ff4fcc2424d7f1b9234","subject":"Calculus A1","threshold":10,"timestamp":"2025-11-28 02:47:23"}
+{"level":"info","message":"Transaction committed successfully","timestamp":"2025-11-28 19:24:15"}
+{"level":"info","message":"Notifying tutor of new match request","studentId":"69285ff4fcc2424d7f1b9234","subject":"General Chemistry","timestamp":"2025-11-28 19:24:15","tutorId":"692918f2362827e136cb714f"}
+{"level":"info","message":"Manual match request created","registrationId":"6929946f4ff7dc0e4a1311d0","studentId":"69285ff4fcc2424d7f1b9234","subject":"General Chemistry","timestamp":"2025-11-28 19:24:15","tutorId":"692918f2362827e136cb714f"}
+{"candidateCount":1,"level":"info","message":"Auto-match scoring complete","subject":"Physics 1","timestamp":"2025-11-28 19:27:20","topScore":0,"topTutorId":"692918f2362827e136cb7150"}
+{"level":"info","message":"Notifying coordinator for review","reason":"Best match score (0) below threshold","registrationId":"692995284ff7dc0e4a1311d9","timestamp":"2025-11-28 19:27:20"}
+{"level":"info","message":"Notifying student of coordinator review","registrationId":"692995284ff7dc0e4a1311d9","studentId":"69285ff4fcc2424d7f1b9234","timestamp":"2025-11-28 19:27:20"}
+{"bestScore":0,"level":"warn","message":"Auto-match failed - score below threshold","studentId":"69285ff4fcc2424d7f1b9234","subject":"Physics 1","threshold":10,"timestamp":"2025-11-28 19:27:20"}
