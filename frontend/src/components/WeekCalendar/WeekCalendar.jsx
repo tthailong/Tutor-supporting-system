@@ -7,13 +7,7 @@ const TIME_SLOTS = [
 ];
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-//const TUTOR_ID = "692918f2362827e136cb714f";
-const user = JSON.parse(localStorage.getItem("user"));
-const TUTOR_ID = user?.tutorProfile
-console.log("TUTOR_ID:", TUTOR_ID);
-console.log("user from localStorage:", localStorage.getItem("user"));
-
-
+const TUTOR_ID = "692918f2362827e136cb714f";
 
 const WeekCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
