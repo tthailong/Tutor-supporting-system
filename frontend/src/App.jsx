@@ -11,7 +11,7 @@ import Manual from './components/MatchOption/Manual/Manual'
 import Automatic from './components/MatchOption/Automatic/Automatic'
 import Footer from './components/Footer/Footer'
 import Login from './components/Login/Login'
-
+import Awards from './pages/Awards/Awards';
 
 
 const App = () => {
@@ -30,6 +30,7 @@ const App = () => {
             <Route path='manual' element={<Manual />} />
             <Route path='auto' element={<Automatic />} />
           </Route>
+          <Route path='/awards' element={<Awards />} />
         </Routes>
       </div>
       <Footer />

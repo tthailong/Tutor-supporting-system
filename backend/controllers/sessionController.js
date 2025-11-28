@@ -5,9 +5,6 @@ import Tutor from "../models/tutorModel.js";
 const parseTime = (t) => parseInt(t.replace(":", ""));
 
 // ---------------------------------------------------
-// 1. CREATE SESSION - CORRECTED
-// ---------------------------------------------------
-// ---------------------------------------------------
 // CREATE SESSION  (FULLY REWRITTEN & CORRECT)
 // ---------------------------------------------------
 export const createSession = async (req, res) => {
@@ -152,18 +149,25 @@ export const createSession = async (req, res) => {
   }
 };
 
-
-
 export const getSessionsByTutor = async (req, res) => {
   try {
     const { tutorId } = req.params;
     const sessions = await Session.find({ tutor: tutorId })
-      .populate('students', 'name email') // Optional: populate basic student info
+      .populate('students', 'fullname email')
       .sort({ startDate: 1 });
 
-    res.status(200).json({ success: true, sessions });
+    // Return in consistent format with 'data' field
+    res.status(200).json({ 
+      success: true, 
+      count: sessions.length,
+      data: sessions 
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Get sessions by tutor error:", error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 
@@ -268,9 +272,15 @@ export const deleteSession = async (req, res) => {
       $pull: { bookedSlots: { sessionId: sessionId } }
     });
 
-    return res.status(200).json({ message: "Session deleted successfully" });
+    return res.status(200).json({ 
+      success: true,
+      message: "Session deleted successfully" 
+    });
 
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };

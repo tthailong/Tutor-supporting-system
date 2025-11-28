@@ -27,6 +27,12 @@ const Sidebar = () => {
                     <div className='sidebar-button'>Match tutor</div>
                 </Link>
                 <Link
+                    to='/awards'
+                    className={`sidebar-option ${location.pathname === "/awards" ? "active" : ""}`}
+                >
+                    <div className='sidebar-button'>Award Credits/Scholarships</div>
+                </Link>
+                <Link
                     to='/profile'
                     className={`sidebar-option ${location.pathname === "/profile" ? "active" : ""}`}
                 >

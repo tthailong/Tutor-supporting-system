@@ -1,4 +1,5 @@
 import awardModel from "../models/awardModel.js";
+import mongoose from "mongoose";
 
 // Create new award
 const createAward = async (req, res) => {
@@ -13,6 +14,16 @@ const createAward = async (req, res) => {
             });
         }
 
+        // Validate ObjectIds
+        if (!mongoose.Types.ObjectId.isValid(studentId) || 
+            !mongoose.Types.ObjectId.isValid(tutorId) || 
+            !mongoose.Types.ObjectId.isValid(sessionId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid ID format"
+            });
+        }
+
         // Create new award
         const newAward = new awardModel({
             studentId,
@@ -23,6 +34,12 @@ const createAward = async (req, res) => {
         });
 
         await newAward.save();
+
+        // Populate the references before sending response
+        await newAward.populate([
+            { path: 'studentId', select: 'fullname email' },
+            { path: 'sessionId', select: 'subject' }
+        ]);
 
         res.status(201).json({
             success: true,
@@ -42,8 +59,11 @@ const createAward = async (req, res) => {
 // Get all awards
 const getAllAwards = async (req, res) => {
     try {
-        const awards = await awardModel.find({});
-        
+        const awards = await awardModel.find({})
+            .populate('studentId', 'fullname email')
+            .populate('sessionId', 'subject')
+            .sort({ createdAt: -1 });
+
         res.status(200).json({
             success: true,
             count: awards.length,
@@ -63,7 +83,17 @@ const getAllAwards = async (req, res) => {
 const getAwardById = async (req, res) => {
     try {
         const { id } = req.params;
-        const award = await awardModel.findById(id);
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid award ID format"
+            });
+        }
+
+        const award = await awardModel.findById(id)
+            .populate('studentId', 'fullname email')
+            .populate('sessionId', 'subject');
 
         if (!award) {
             return res.status(404).json({
@@ -90,7 +120,18 @@ const getAwardById = async (req, res) => {
 const getAwardsByStudent = async (req, res) => {
     try {
         const { studentId } = req.params;
-        const awards = await awardModel.find({ studentId: Number(studentId) });
+
+        if (!mongoose.Types.ObjectId.isValid(studentId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid student ID format"
+            });
+        }
+
+        const awards = await awardModel.find({ studentId })
+            .populate('studentId', 'fullname email')
+            .populate('sessionId', 'subject')
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
@@ -111,7 +152,18 @@ const getAwardsByStudent = async (req, res) => {
 const getAwardsByTutor = async (req, res) => {
     try {
         const { tutorId } = req.params;
-        const awards = await awardModel.find({ tutorId: Number(tutorId) });
+
+        if (!mongoose.Types.ObjectId.isValid(tutorId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid tutor ID format"
+            });
+        }
+
+        const awards = await awardModel.find({ tutorId })
+            .populate('studentId', 'fullname email')
+            .populate('sessionId', 'subject')
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
@@ -134,6 +186,13 @@ const editAward = async (req, res) => {
         const { id } = req.params;
         const { credits, scholarship } = req.body;
 
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid award ID format"
+            });
+        }
+
         // Build update object with only provided fields
         const updateData = {};
         if (credits !== undefined) updateData.credits = credits;
@@ -150,7 +209,9 @@ const editAward = async (req, res) => {
             id,
             updateData,
             { new: true, runValidators: true }
-        );
+        )
+            .populate('studentId', 'fullname email')
+            .populate('sessionId', 'subject');
 
         if (!updatedAward) {
             return res.status(404).json({
@@ -178,6 +239,13 @@ const editAward = async (req, res) => {
 const deleteAward = async (req, res) => {
     try {
         const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid award ID format"
+            });
+        }
 
         const deletedAward = await awardModel.findByIdAndDelete(id);
 
