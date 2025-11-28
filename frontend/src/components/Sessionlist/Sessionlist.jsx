@@ -6,7 +6,7 @@ import Sessionform from '../Sessionform/Sessionform';
 
 const user = JSON.parse(localStorage.getItem("user"));
 const TUTOR_ID = user?.tutorProfile;
-
+const token = user?.token;
 
 const API_URL = "http://localhost:4000/api/session";
 

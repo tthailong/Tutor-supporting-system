@@ -26,7 +26,7 @@ const Manual = () => {
     fetchTutors();
   }, [selectedSubject, selectedDay]);
 
-  const fetchTutors = async () => {
+  const   fetchTutors = async () => {
     setLoading(true);
     setError(null);
     
