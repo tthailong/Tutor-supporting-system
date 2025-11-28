@@ -61,10 +61,6 @@ const sessionSchema = new mongoose.Schema({
   tutor: { type: mongoose.Schema.Types.ObjectId, ref: "Tutor", required: true },
   location: { type: String, required: true },
 
-  // ---------------------------------------------------------
-  // CHANGED: No more 'timeTable' with Mon/Tue. 
-  // Now using 'schedule' Map (Key: "YYYY-MM-DD", Value: [Slots])
-  // ---------------------------------------------------------
   schedule: {
     type: Map,
     of: [timeSlotSchema], 
@@ -74,20 +70,18 @@ const sessionSchema = new mongoose.Schema({
   // Metadata
   startDate: { type: Date, required: true }, // Useful for sorting
   duration: { type: Number, required: true }, // in weeks
-  //endDate: { type: Date }, // Useful for sorting
+
   
   capacity: { type: Number, required: true },
   description: { type: String },
 
   students: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], 
 
-  // 2. NEW: Array of Session Evaluations (Reviews from students)
   evaluations: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "SessionEvaluation" 
   }],
 
-  // 3. NEW: Array of Progress Reports (Feedback from Tutor to Student)
   studentProgress: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "StudentProgress" 
@@ -106,14 +100,12 @@ const sessionSchema = new mongoose.Schema({
 sessionSchema.pre("save", function (next) {
   const schedule = this.schedule || new Map();
 
-  // 1. Check for internal overlaps (e.g., Session has 8-9 and 8:30-9:30 on same day)
   for (const [date, slots] of schedule.entries()) {
     if (hasOverlap(slots)) {
       return next(new Error(`Session schedule overlaps on ${date}`));
     }
   }
 
-  // 2. Auto-calculate endDate based on the last key in the schedule map
   if (schedule.size > 0) {
     const sortedDates = Array.from(schedule.keys()).sort();
     this.startDate = new Date(sortedDates[0]); // First Key
@@ -131,17 +123,26 @@ sessionSchema.methods.getSessionDates = function() {
   const allBookings = [];
   const schedule = this.schedule || new Map();
 
-  for (const [dateString, slots] of schedule.entries()) {
-    // dateString is "2025-11-24"
-    const dateObj = new Date(dateString);
-    
-    slots.forEach(slot => {
-      allBookings.push({
-        date: dateObj,
-        start: slot.start,
-        end: slot.end
+  // Get the first date in schedule as reference
+  const sortedDates = Array.from(schedule.keys()).sort();
+  if (sortedDates.length === 0) return allBookings;
+
+  const firstDate = new Date(sortedDates[0]);
+  const duration = this.duration || 1; // fallback 1 week
+
+  for (let week = 0; week < duration; week++) {
+    for (const [dateString, slots] of schedule.entries()) {
+      const baseDate = new Date(dateString);
+      baseDate.setDate(baseDate.getDate() + 7 * week); // shift by week
+
+      slots.forEach(slot => {
+        allBookings.push({
+          date: new Date(baseDate),
+          start: slot.start,
+          end: slot.end
+        });
       });
-    });
+    }
   }
   return allBookings;
 };
