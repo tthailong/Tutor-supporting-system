@@ -10,8 +10,8 @@ tutorRouter.get("/", validateTutorFilters, getTutors);
 
 // Get specific tutor data
 tutorRouter.get("/:tutorId", getTutorData);
-
-// Set tutor availability
+// Get all tutors with filtering (Marketplace)
+tutorRouter.get("/", validateTutorFilters, getTutors);
 tutorRouter.post("/availability", setAvailability);
 
 export default tutorRouter;

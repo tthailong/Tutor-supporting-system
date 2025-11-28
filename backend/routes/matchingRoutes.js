@@ -32,8 +32,8 @@ matchingRouter.get(
 // Create manual match request
 matchingRouter.post(
   "/manual",
-//  authMiddleware,
-//  requireRole("Student"),
+  authMiddleware,
+  requireRole("Student"),
   validateManualMatchRequest,
   createManualMatchRequest
 );
@@ -41,8 +41,8 @@ matchingRouter.post(
 // Auto-match algorithm
 matchingRouter.post(
   "/auto",
-//  authMiddleware,
-//  requireRole("Student"),
+  authMiddleware,
+  requireRole("Student"),
   validateAutoMatchRequest,
   autoMatch
 );

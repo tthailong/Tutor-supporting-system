@@ -4,7 +4,10 @@ import Searchbar from '../Searchbar/Searchbar';
 import Sessioncard from '../Sessioncard/Sessioncard';
 import Sessionform from '../Sessionform/Sessionform';
 
-const TUTOR_ID = "692918f2362827e136cb714f"; // Replace with context/auth ID
+const user = JSON.parse(localStorage.getItem("user"));
+const TUTOR_ID = user?.tutorProfile;
+
+
 const API_URL = "http://localhost:4000/api/session";
 
 const getFirstSessionTime = (scheduleMap) => {
@@ -131,7 +134,10 @@ const Sessionlist = ({ role = 'tutor' }) => {
 
         const res = await fetch(url, {
             method: method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
             body: JSON.stringify(payload)
         });
 

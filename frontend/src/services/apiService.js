@@ -21,8 +21,9 @@ const api = axios.create({
  * @returns {Promise} Axios response with tutors array
  */
 export const getTutors = (filters = {}) => {
-  return api.get('/api/tutors', { params: filters });
+    return api.get('/api/matching/tutors', { params: filters });
 };
+  
 
 // ==========================================
 // MATCHING ENDPOINTS (NO AUTH FOR TESTING)
