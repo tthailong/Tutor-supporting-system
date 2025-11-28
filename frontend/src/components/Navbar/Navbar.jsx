@@ -22,9 +22,9 @@ const Navbar = () => {
                 <img src={assets.chat}  alt="" />
                 <div className="dot"></div>
             </div>
-            <div className="navbar-noti">
+            <Link to='/login' className="navbar-noti">
                 <img src={assets.account}  alt="" />
-            </div>
+            </Link>
         </div>
     </div>
   )
