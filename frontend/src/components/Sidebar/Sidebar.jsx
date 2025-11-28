@@ -25,7 +25,12 @@ const Sidebar = () => {
                         >
                             <div className='sidebar-button'>View sessions</div>
                         </Link>
-
+                        <Link
+                            to='/awards'
+                            className={`sidebar-option ${location.pathname === "/awards" ? "active" : ""}`}
+                        >
+                            <div className='sidebar-button'>Award Credits/Scholarships</div>
+                        </Link>
                     </>
                 )}
 

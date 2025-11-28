@@ -14,6 +14,7 @@ import Login from './components/Login/Login'
 import StudentViewCourse from './pages/StudentViewCourse/StudentViewCourse'
 import SelectTimeSlot from './pages/SelectTimeSlot/SelectTimeSlot'
 import NotificationsPage from './pages/NotificationPage/NotificationPage';
+import Awards from './pages/Awards/Awards';
 
 
 const App = () => {
@@ -35,6 +36,7 @@ const App = () => {
           <Route path="/studentviewcourse" element={<StudentViewCourse />} />
           <Route path="/selecttimeslot/:sessionId" element={<SelectTimeSlot />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path='/awards' element={<Awards />} />
         </Routes>
       </div>
       <Footer />
