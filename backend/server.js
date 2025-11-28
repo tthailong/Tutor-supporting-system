@@ -4,6 +4,7 @@ import { connectDB } from "./config/db.js"
 import  sessionRouter  from "./routes/sessionRoute.js"
 import tutorRouter from "./routes/tutorRoute.js"
 import authRouter from "./routes/authRoute.js"
+import matchingRouter from "./routes/matchingRoutes.js"
 import "dotenv/config.js"
 
 
@@ -22,6 +23,7 @@ connectDB();
 app.use("/api/tutors", tutorRouter)
 app.use("/api/session",sessionRouter)
 app.use("/api/auth",authRouter)
+app.use("/api/matching",matchingRouter);
 
 
 app.get("/", (req, res) => {

@@ -10,6 +10,8 @@ const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 //const TUTOR_ID = "692918f2362827e136cb714f";
 const user = JSON.parse(localStorage.getItem("user"));
 const TUTOR_ID = user?.tutorProfile
+const token = user?.token;
+
 console.log("TUTOR_ID:", TUTOR_ID);
 console.log("user from localStorage:", localStorage.getItem("user"));
 
@@ -135,7 +137,10 @@ const WeekCalendar = () => {
   
     const res = await fetch("http://localhost:4000/api/tutors/availability", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify(payload)
     });
   
