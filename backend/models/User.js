@@ -57,6 +57,12 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Tutor",
     default: null
+  },
+
+  studentProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Student",
+    default: null
   }
 
 }, {

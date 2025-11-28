@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import StudentProgress from '../models/studentProgressModel.js';
 
 // Login user
 export const loginUser = async (req, res) => {
@@ -65,7 +66,8 @@ export const loginUser = async (req, res) => {
         fullname: user.fullname,
         role: user.role,
         hcmutID: user.hcmutID,
-        tutorProfile: user.tutorProfile
+        tutorProfile: user.tutorProfile,
+        studentProfile: user.studentProfile
       }
     });
 
