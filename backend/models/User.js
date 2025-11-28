@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+//import tutorModel from './tutorModel';
 
 // Định nghĩa Schema dựa trên Class "User Account" trong báo cáo
 const UserSchema = new mongoose.Schema({
@@ -49,6 +50,13 @@ const UserSchema = new mongoose.Schema({
   hcmutID: {
     type: String,
     trim: true
+  },
+
+  // them ref cho tutor
+  tutorProfile: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Tutor",
+    default: null
   }
 
 }, {

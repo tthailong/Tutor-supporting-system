@@ -75,7 +75,7 @@ const sessionSchema = new mongoose.Schema({
   capacity: { type: Number, required: true },
   description: { type: String },
 
-  students: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], 
+  students: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],  //dummy, need to change to student later
 
   evaluations: [{ 
     type: mongoose.Schema.Types.ObjectId, 
