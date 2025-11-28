@@ -11,7 +11,9 @@ import Manual from './components/MatchOption/Manual/Manual'
 import Automatic from './components/MatchOption/Automatic/Automatic'
 import Footer from './components/Footer/Footer'
 import Login from './components/Login/Login'
-
+import StudentViewCourse from './pages/StudentViewCourse/StudentViewCourse'
+import SelectTimeSlot from './pages/SelectTimeSlot/SelectTimeSlot'
+import NotificationsPage from './pages/NotificationPage/NotificationPage';
 
 
 const App = () => {
@@ -30,6 +32,9 @@ const App = () => {
             <Route path='manual' element={<Manual />} />
             <Route path='auto' element={<Automatic />} />
           </Route>
+          <Route path="/studentviewcourse" element={<StudentViewCourse />} />
+          <Route path="/selecttimeslot/:sessionId" element={<SelectTimeSlot />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Routes>
       </div>
       <Footer />

@@ -1,0 +1,110 @@
+.mycourses-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    background-color: #fff;
+    position: relative; /* để courses-list dùng absolute */
+}
+
+/* Sidebar cố định bên trái */
+.mycourses-container > .sidebar {
+    width: 250px; 
+    height: 100%;
+    flex-shrink: 0;
+}
+
+/* Wrapper danh sách khóa học căn giữa */
+.mycourses-container > .courses-list {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 600px;
+}
+
+/* Card khóa học */
+.course-card {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.course-card:hover {
+    transform: translateY(-2px);
+}
+
+.course-card h3 {
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.course-card p {
+    margin-bottom: 5px;
+    color: #555;
+}
+
+/* Room riêng biệt */
+.course-card .room {
+    font-style: italic;
+    color: #777;
+}
+
+/* Nút trong card */
+.course-card-buttons {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.reschedule-btn, .cancel-btn {
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.reschedule-btn {
+    background-color: #4caf50;
+    color: white;
+}
+
+.reschedule-btn:hover {
+    background-color: #45a049;
+}
+
+.cancel-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Responsive màn hình nhỏ */
+@media (max-width: 768px) {
+    .mycourses-container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .mycourses-container > .sidebar {
+        width: 100%;
+        height: auto;
+    }
+
+    .mycourses-container > .courses-list {
+        position: static;
+        transform: none;
+        width: 100%;
+        padding: 10px;
+    }
+}

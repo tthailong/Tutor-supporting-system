@@ -3,6 +3,8 @@ import cors from "cors"
 import { connectDB } from "./config/db.js"
 import  sessionRouter  from "./routes/sessionRoute.js"
 import tutorRouter from "./routes/tutorRoute.js"
+import studentRouter from "./routes/studentRoute.js"
+import notificationRouter from "./routes/notificationRoute.js";
 import "dotenv/config.js"
 
 
@@ -20,7 +22,8 @@ connectDB();
 //api routes
 app.use("/api/tutors", tutorRouter);
 app.use("/api/session",sessionRouter)
-
+app.use("/api/student", studentRouter);
+app.use("/api/notifications", notificationRouter);
 
 app.get("/", (req, res) => {
     res.send("API working")
