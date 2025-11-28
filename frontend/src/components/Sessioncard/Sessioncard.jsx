@@ -14,6 +14,17 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
     setSession(sessionData);
   }, [sessionData]);
 
+    // Inside SessioncardWithFeedback
+  const handleFeedbackSubmit = (feedbackData) => {
+    setSession(prev => ({ ...prev, studentFeedback: feedbackData }));
+    setShowFeedbackForm(false);
+  };
+
+  const handleProgressSave = (progressData) => {
+    setSession(prev => ({ ...prev, tutorProgress: progressData }));
+    setShowProgressTracker(false);
+  };
+
   // Safe defaults
   const studentFeedback = session.studentFeedback || { submitted: false, rating: 0 };
   const tutorProgress = session.tutorProgress || { lastUpdated: null };
