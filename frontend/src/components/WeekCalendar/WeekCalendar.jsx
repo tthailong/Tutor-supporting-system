@@ -9,7 +9,7 @@ const TIME_SLOTS = [
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 //const TUTOR_ID = "692918f2362827e136cb714f";
 const user = JSON.parse(localStorage.getItem("user"));
-const TUTOR_ID = user?.tutorProfile
+const TUTOR_ID = user?.tutorProfile;
 const token = user?.token;
 
 console.log("TUTOR_ID:", TUTOR_ID);
@@ -26,7 +26,12 @@ const WeekCalendar = () => {
   useEffect(() => {
     const fetchTutorData = async () => {
       try {
-        const res = await fetch(`http://localhost:4000/api/tutors/${TUTOR_ID}`);
+        const res = await fetch(`http://localhost:4000/api/tutors/${TUTOR_ID}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` // <--- add this
+          }
+        });
         const data = await res.json();
         
         if (data.success) {

@@ -4,6 +4,8 @@ import { connectDB } from "./config/db.js"
 import authRouter from "./routes/authRoute.js"
 import sessionRouter from "./routes/sessionRoute.js"
 import tutorRouter from "./routes/tutorRoute.js"
+import studentRouter from "./routes/studentRoute.js"
+import notificationRouter from "./routes/notificationRoute.js";
 import matchingRouter from "./routes/matchingRoutes.js"
 import awardRouter from "./routes/awardRoute.js"
 import userRouter from "./routes/userRoute.js"
@@ -24,7 +26,9 @@ connectDB();
 //api routes
 app.use("/api/auth", authRouter)
 app.use("/api/tutors", tutorRouter);
-app.use("/api/session", sessionRouter)
+app.use("/api/session",sessionRouter)
+app.use("/api/student", studentRouter);
+app.use("/api/notifications", notificationRouter);
 app.use("/api/matching", matchingRouter);
 app.use("/api/awards", awardRouter);
 app.use("/api/users", userRouter);
