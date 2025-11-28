@@ -19,9 +19,18 @@ const AwardModal = ({
     // Update form data when editing award changes
     useEffect(() => {        
         if (editingAward) {
+            // Extract _id from populated objects or use the value directly
+            const studentIdValue = typeof editingAward.studentId === 'object' 
+                ? editingAward.studentId._id 
+                : editingAward.studentId;
+                
+            const sessionIdValue = typeof editingAward.sessionId === 'object'
+                ? editingAward.sessionId._id
+                : editingAward.sessionId;
+            
             setFormData({
-                studentId: editingAward.studentId,
-                sessionId: editingAward.sessionId,
+                studentId: studentIdValue || '',
+                sessionId: sessionIdValue || '',
                 credits: editingAward.credits || '',
                 scholarship: editingAward.scholarship || ''
             });
