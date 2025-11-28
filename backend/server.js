@@ -1,12 +1,13 @@
 import express from "express"
 import cors from "cors"
 import { connectDB } from "./config/db.js"
-import  sessionRouter  from "./routes/sessionRoute.js"
-import tutorRouter from "./routes/tutorRoute.js"
 import authRouter from "./routes/authRoute.js"
+import sessionRouter  from "./routes/sessionRoute.js"
+import tutorRouter from "./routes/tutorRoute.js"
 import matchingRouter from "./routes/matchingRoutes.js"
+import awardRouter from "./routes/awardRoute.js"
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js"
 import "dotenv/config.js"
-
 
 // app config
 const app = express()
@@ -20,15 +21,19 @@ app.use(cors())
 connectDB();
 
 //api routes
-app.use("/api/tutors", tutorRouter)
-app.use("/api/session",sessionRouter)
 app.use("/api/auth",authRouter)
-app.use("/api/matching",matchingRouter);
-
+app.use("/api/tutors", tutorRouter);
+app.use("/api/session",sessionRouter)
+app.use("/api/matching", matchingRouter);
+app.use("api/awards", awardRouter);
 
 app.get("/", (req, res) => {
     res.send("API working")
 })
+
+// Error handling (must be after all routes)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 app.listen(port,() => {
     console.log(`Server started on http://localhost:${port}`);

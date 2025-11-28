@@ -1,58 +1,79 @@
 import tutorModel from "../models/tutorModel.js";
 
 /**
- * Insert/replace weekly availability for a tutor
+ * Get tutor data by ID
+ * @route GET /api/tutors/:tutorId
  */
-const createToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET)
-}
-// ... existing createToken ...
-
-// 1. GET Tutor Data (To load Green/Gray slots)
 export const getTutorData = async (req, res) => {
   try {
     const { tutorId } = req.params;
-    const tutor = await tutorModel.findById(tutorId);
-
-    if (!tutor) return res.status(404).json({ message: "Tutor not found" });
-
+    
+    const tutor = await tutorModel.findById(tutorId)
+      .select('-bookedSlots')
+      .lean();
+    
+    if (!tutor) {
+      return res.status(404).json({
+        success: false,
+        message: "Tutor not found"
+      });
+    }
+    
     res.status(200).json({
       success: true,
-      availability: tutor.availability || {},
-      bookedSlots: tutor.bookedSlots || []
+      tutor
     });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    console.error("Error fetching tutor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tutor data"
+    });
   }
 };
 
-// 2. SET Availability (Your existing logic, slightly refined for the Map)
+/**
+ * Set tutor availability
+ * @route POST /api/tutors/availability
+ */
 export const setAvailability = async (req, res) => {
   try {
     const { tutorId, availability } = req.body;
-
+    
     if (!tutorId || !availability) {
-      return res.status(400).json({ message: "Missing fields" });
+      return res.status(400).json({
+        success: false,
+        message: "tutorId and availability are required"
+      });
     }
-
+    
     const tutor = await tutorModel.findById(tutorId);
-    if (!tutor) return res.status(404).json({ message: "Tutor not found" });
-
-    // Update the availability Map
-    // We expect availability to be: { "2025-11-26": [{start: "07:00", end:"08:00"}], ... }
+    
+    if (!tutor) {
+      return res.status(404).json({
+        success: false,
+        message: "Tutor not found"
+      });
+    }
+    
+    // Update availability
     tutor.availability = availability;
-
     await tutor.save();
     
-    return res.status(200).json({
+    res.status(200).json({
+      success: true,
       message: "Availability updated successfully",
-      tutor
+      tutor: {
+        _id: tutor._id,
+        name: tutor.name,
+        availability: tutor.availability
+      }
     });
-
-  } catch (err) {
-    return res.status(500).json({ 
-      message: "Server error", 
-      error: err.message 
+  } catch (error) {
+    console.error("Error updating availability:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update availability"
     });
   }
 };
