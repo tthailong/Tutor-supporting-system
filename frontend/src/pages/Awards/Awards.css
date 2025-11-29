@@ -142,9 +142,29 @@
     transition: color 0.2s;
 }
 
-.btn-edit:hover,
-.btn-delete:hover {
-    transform: scale(1.2);
+.action-link:hover {
+    text-decoration: underline;
+}
+
+.edit-link {
+    color: #1976d2;
+}
+
+.edit-link:hover {
+    color: #1565c0;
+}
+
+.delete-link {
+    color: #d32f2f;
+}
+
+.delete-link:hover {
+    color: #c62828;
+}
+
+.action-separator {
+    margin: 0 8px;
+    color: #ccc;
 }
 
 /* Responsive Design */
