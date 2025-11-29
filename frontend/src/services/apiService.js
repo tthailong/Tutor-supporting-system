@@ -152,4 +152,8 @@ export const isAuthenticated = () => {
   return !!localStorage.getItem('token');
 };
 
+<<<<<<< HEAD
 export default api;
+=======
+export default api;
+>>>>>>> origin/main

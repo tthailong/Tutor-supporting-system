@@ -10,6 +10,8 @@ import matchingRouter from "./routes/matchingRoutes.js"
 import awardRouter from "./routes/awardRoute.js"
 import userRouter from "./routes/userRoute.js"
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js"
+import evaluationRouter from "./routes/evaluationRoutes.js";
+import progressRouter from "./routes/progressRoutes.js";
 import "dotenv/config.js"
 
 // app config
@@ -32,6 +34,8 @@ app.use("/api/notifications", notificationRouter);
 app.use("/api/matching", matchingRouter);
 app.use("/api/awards", awardRouter);
 app.use("/api/users", userRouter);
+app.use("/api/evaluations", evaluationRouter);
+app.use("/api/progress", progressRouter);
 
 app.get("/", (req, res) => {
     res.send("API working")
