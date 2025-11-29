@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import './Awards.css';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import AwardModal from '../../components/AwardModal/AwardModal';
 import Sidebar from '../../components/Sidebar/Sidebar';
@@ -15,6 +14,9 @@ const Awards = () => {
 
     const user = JSON.parse(localStorage.getItem("user"));
     const TUTOR_ID = user?.tutorProfile;
+    const token = localStorage.getItem('token');
+
+    const API_BASE = '/api';
 
     useEffect(() => {
         if (TUTOR_ID) {
@@ -31,18 +33,38 @@ const Awards = () => {
 
         try {
             setLoading(true);
-            const [studentsRes, sessionsRes, awardsRes] = await Promise.all([
-                axios.get(`/api/users/role/Student`),
-                axios.get(`/api/session/tutor/${TUTOR_ID}`),
-                axios.get(`/api/awards/tutor/${TUTOR_ID}`)
-            ]);
             
-            setStudents(studentsRes.data?.data || []);
-            setSessions(sessionsRes.data?.data || []);
-            setAwards(awardsRes.data?.data || []); 
+            const [studentsRes, sessionsRes, awardsRes] = await Promise.all([
+                fetch(`${API_BASE}/users/role/Student`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }),
+                fetch(`${API_BASE}/session/tutor/${TUTOR_ID}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }),
+                fetch(`${API_BASE}/awards/tutor/${TUTOR_ID}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+            ]);
+
+            const studentsData = await studentsRes.json();
+            const sessionsData = await sessionsRes.json();
+            const awardsData = await awardsRes.json();
+            
+            setStudents(studentsData?.data || []);
+            setSessions(sessionsData?.data || []);
+            setAwards(awardsData?.data || []); 
         } catch (error) {
             console.error('Error fetching data:', error);
-            toast.error(error.response?.data?.message || 'Failed to load data');
+            toast.error(error.message || 'Failed to load data');
         } finally {
             setLoading(false);
         }
@@ -50,26 +72,47 @@ const Awards = () => {
 
     const handleModalSubmit = async (formData) => {
         try {
+            let response;
+            
             if (editingAward) {
-                await axios.put(`/api/awards/${editingAward._id}`, {
-                    credits: formData.credits,
-                    scholarship: formData.scholarship
+                response = await fetch(`${API_BASE}/awards/${editingAward._id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        credits: formData.credits,
+                        scholarship: formData.scholarship
+                    })
                 });
-                toast.success('Award updated successfully');
             } else {
-                await axios.post(`/api/awards`, {
-                    ...formData,
-                    tutorId: TUTOR_ID
+                response = await fetch(`${API_BASE}/awards`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ...formData,
+                        tutorId: TUTOR_ID
+                    })
                 });
-                toast.success('Award created successfully');
             }
 
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to save award');
+            }
+
+            toast.success(editingAward ? 'Award updated successfully' : 'Award created successfully');
             setShowModal(false);
             setEditingAward(null);
             fetchAllData();
         } catch (error) {
             console.error('Error saving award:', error);
-            toast.error(error.response?.data?.message || 'Failed to save award');
+            toast.error(error.message || 'Failed to save award');
         }
     };
 
@@ -84,12 +127,25 @@ const Awards = () => {
         }
 
         try {
-            await axios.delete(`/api/awards/${awardId}`);
+            const response = await fetch(`${API_BASE}/awards/${awardId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to delete award');
+            }
+
             toast.success('Award deleted successfully');
             fetchAllData();
         } catch (error) {
             console.error('Error deleting award:', error);
-            toast.error(error.response?.data?.message || 'Failed to delete award');
+            toast.error(error.message || 'Failed to delete award');
         }
     };
 
@@ -174,8 +230,8 @@ const Awards = () => {
                                                 </div>
                                             </td>
                                             <td>
-                                                {award.sessionId?.title || 
-                                                 award.sessionId?.subject || 
+                                                {award.sessionId?.subject || 
+                                                 award.sessionId?.title || 
                                                  'Unknown Session'}
                                             </td>
                                             <td>

@@ -212,7 +212,6 @@ const Sessionlist = ({ role = 'tutor' }) => {
             )}
           </div>
         </div>
-        <Sessioncard role="tutor" />
 
         {filteredSessions.length === 0 ? (
           <p className="no-sessions">No sessions found.</p>
