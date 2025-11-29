@@ -149,11 +149,11 @@ export const rescheduleSession = async (req, res) => {
       const oldDate = Array.from(session.schedule.keys())[0];
 
       // 1. Remove bookedSlot cũ
-      const oldBooked = tutor.bookedSlots.get(oldDate) || [];
-      tutor.bookedSlots.set(
-        oldDate,
-        oldBooked.filter(b => String(b.sessionId) !== String(sessionId))
-      );
+      //const oldBooked = tutor.bookedSlots.get(oldDate) || [];
+      //tutor.bookedSlots.set(
+      //  oldDate,
+      // oldBooked.filter(b => String(b.sessionId) !== String(sessionId))
+      //);
 
       // 2. Add bookedSlot mới
       const bookedList = tutor.bookedSlots.get(date) || [];
