@@ -19,39 +19,107 @@ export const getAvailableRescheduleSlots = async (req, res) => {
   try {
     const { sessionId } = req.params;
 
-    const session = await Session.findById(sessionId).populate("tutor");
+    // 1. Find the session
+    const session = await Session.findById(sessionId)
+      .populate("tutor")
+      .populate("students");
+
     if (!session) return res.status(404).json({ message: "Session not found" });
 
     const tutor = session.tutor;
+    const tutorId = tutor._id;
 
-    // thời khóa biểu ban đầu (schedule) nhưng chỉ lấy ngày đầu tiên
-    const schedule = session.schedule;
-    const originalDates = Array.from(schedule.keys());
+    const originalDate = Array.from(session.schedule.keys())[0];
+    const originalSlot = session.schedule.get(originalDate)[0];
 
-    if (originalDates.length === 0) 
-      return res.status(200).json({ success: true, availableSlots: [] });
+    // Convert helper
+    const toNum = (t) => Number(t.replace(":", ""));
 
-    const originalDate = originalDates[0];
+    // ---------------------------
+    // (A) Available slots
+    // ---------------------------
 
-    const existingSlots = tutor.bookedSlots.get(originalDate) || [];
-    const availableSlots = tutor.availability.get(originalDate) || [];
+    const availability = [];
 
-    const freeSlots = availableSlots.filter(av => {
-      const avStart = Number(av.start.replace(":", ""));
-      const avEnd = Number(av.end.replace(":", ""));
+    for (const [date, slots] of tutor.availability.entries()) {
+      const booked = tutor.bookedSlots.get(date) || [];
 
-      for (const b of existingSlots) {
-        const bStart = Number(b.start.replace(":", ""));
-        const bEnd = Number(b.end.replace(":", ""));
-        if (avStart < bEnd && avEnd > bStart) return false;
-      }
+      slots.forEach(av => {
+        let conflict = false;
 
-      return true;
+        const avStart = toNum(av.start);
+        const avEnd = toNum(av.end);
+
+        booked.forEach(b => {
+          const bStart = toNum(b.start);
+          const bEnd = toNum(b.end);
+          if (avStart < bEnd && avEnd > bStart) conflict = true;
+        });
+
+        if (!conflict) {
+          availability.push({
+            type: "availability",
+            date,
+            start: av.start,
+            end: av.end
+          });
+        }
+      });
+    }
+
+    // ---------------------------
+    // (B) Tutor’s existing sessions
+    // ---------------------------
+
+    // Find all sessions of tutor except the one being rescheduled
+    const otherSessions = await Session.find({
+      tutor: tutorId,
+      _id: { $ne: sessionId }
+    })
+      .populate("students", "name")
+      .sort({ startDate: 1 });
+
+    const joinableSessions = [];
+
+    otherSessions.forEach(sess => {
+      const date = Array.from(sess.schedule.keys())[0];
+      const slot = sess.schedule.get(date)[0];
+
+      const start = toNum(slot.start);
+      const end = toNum(slot.end);
+
+      const origStart = toNum(originalSlot.start);
+      const origEnd = toNum(originalSlot.end);
+
+      // Skip if capacity full
+      if (sess.students.length >= sess.capacity) return;
+
+      // Skip if same time slot as old session
+      if (start === origStart && end === origEnd && date === originalDate) return;
+
+      joinableSessions.push({
+        type: "session",
+        sessionId: sess._id,
+        subject: sess.subject,
+        tutor: tutor.name,
+        date,
+        start: slot.start,
+        end: slot.end,
+        capacity: sess.capacity,
+        enrolled: sess.students.length
+      });
     });
 
-    return res.status(200).json({ success: true, availableSlots: freeSlots });
+    return res.status(200).json({
+      success: true,
+      options: {
+        availability,
+        sessions: joinableSessions
+      }
+    });
 
   } catch (err) {
+    console.error(err);
     return res.status(500).json({ message: err.message });
   }
 };
@@ -59,42 +127,91 @@ export const getAvailableRescheduleSlots = async (req, res) => {
 export const rescheduleSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { newStart, newEnd } = req.body;
+    const { type, date, start, end, newSessionId } = req.body;
 
-    const session = await Session.findById(sessionId).populate("tutor");
+    const session = await Session.findById(sessionId).populate("tutor students");
     if (!session) return res.status(404).json({ message: "Session not found" });
 
     const tutor = session.tutor;
+    const studentId = session.students[0]._id; // student hiện tại
 
-    // Lấy ngày
-    const schedule = session.schedule;
-    const dates = Array.from(schedule.keys());
-    const dateKey = dates[0];
+    // Helper convert
+    const toNum = (t) => Number(t.replace(":", ""));
 
-    // 1. Remove old bookedSlot
-    const bookedSlots = tutor.bookedSlots.get(dateKey) || [];
-    tutor.bookedSlots.set(
-      dateKey,
-      bookedSlots.filter(b => String(b.sessionId) !== String(sessionId))
-    );
+    // ------------------------------
+    // CASE A: RESCHEDULE TO AVAILABILITY
+    // ------------------------------
+    if (type === "availability") {
+      const oldDate = Array.from(session.schedule.keys())[0];
+      const oldSlot = session.schedule.get(oldDate)[0];
 
-    // 2. Add new bookedSlot
-    tutor.bookedSlots.get(dateKey).push({
-      start: newStart,
-      end: newEnd,
-      sessionId: session._id
-    });
+      // 1. Remove old bookedSlot
+      const oldBooked = tutor.bookedSlots.get(oldDate) || [];
+      tutor.bookedSlots.set(
+        oldDate,
+        oldBooked.filter(b => String(b.sessionId) !== String(sessionId))
+      );
 
-    await tutor.save();
+      // 2. Add new bookedSlot
+      const bookedList = tutor.bookedSlots.get(date) || [];
+      bookedList.push({ start, end, sessionId: session._id });
+      tutor.bookedSlots.set(date, bookedList);
 
-    // 3. Update session schedule
-    session.schedule.set(dateKey, [{ start: newStart, end: newEnd }]);
-    session.status = "Rescheduled";
-    await session.save();
+      // 3. Remove availability used
+      const avList = tutor.availability.get(date) || [];
+      tutor.availability.set(
+        date,
+        avList.filter(a => !(a.start === start && a.end === end))
+      );
 
-    return res.status(200).json({ success: true, session });
+      // 4. Update session schedule
+      session.schedule = new Map([[date, [{ start, end }]]]);
+      session.status = "Rescheduled";
+
+      await tutor.save();
+      await session.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Session rescheduled to availability slot",
+        session
+      });
+    }
+
+    // ------------------------------
+    // CASE B: RESCHEDULE TO ANOTHER SESSION
+    // ------------------------------
+
+    if (type === "session") {
+      const newSession = await Session.findById(newSessionId).populate("students");
+      if (!newSession) return res.status(404).json({ message: "Target session not found" });
+
+      // Check capacity
+      if (newSession.students.length >= newSession.capacity) {
+        return res.status(400).json({ message: "Target session full" });
+      }
+
+      // 1. Remove student from old session
+      session.students = session.students.filter(
+        s => String(s) !== String(studentId)
+      );
+      await session.save();
+
+      // 2. Add student to new session
+      newSession.students.push(studentId);
+      await newSession.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Student moved to new session",
+        newSessionId
+      });
+    }
+
+    return res.status(400).json({ message: "Invalid type" });
 
   } catch (err) {
+    console.error(err);
     return res.status(500).json({ message: err.message });
   }
 };
