@@ -1,7 +1,7 @@
 .notification-container {
     display: flex;
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #fff;
     position: relative;
 }
@@ -9,14 +9,14 @@
 /* Sidebar */
 .notification-container > .sidebar {
     width: 250px;
-    height: 100%;
+    min-height: 100%;
     flex-shrink: 0;
 }
 
 /* Main list */
 .notification-list {
-    position: absolute;
-    left: 50%;
+    position: relative;
+    left: 35%;
     transform: translateX(-50%);
     top: 40px;
 
@@ -24,6 +24,7 @@
     display: flex;
     flex-direction: column;
     gap: 18px;
+    padding-bottom: 80px;
 }
 
 .notification-list h2 {
