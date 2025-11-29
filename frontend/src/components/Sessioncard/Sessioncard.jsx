@@ -4,90 +4,45 @@ import RatingDisplay from './RatingDisplay';
 import FeedbackForm from './FeedbackForm';
 import ProgressTracker from './ProgressTracker';
 
-// Cập nhật MOCK_SESSION_DATA trong Sessioncard.jsx
-const MOCK_SESSION_DATA = {
-  id: 1,
-  title: 'General Chemistry (CH1003)_Đặng Bảo Trọng (CLC_HK251)',
-  time: 'Monday 13:00-14:50',
-  location: 'B1-303',
-  capacity: 6,
-  signedUp: 5,
-  status: 'scheduled',
-
-  id: 2,
-  title: 'General Chemistry (CH1003)_Đặng Bảo Trọng (CLC_HK251)',
-  time: 'Tuesday 13:00-14:50',
-  location: 'B1-303',
-  capacity: 10,
-  signedUp: 7,
-  status: 'scheduled',
-  // NEW FEEDBACK FIELDS
-  studentFeedback: {
-    rating: 0, // 0 = chưa đánh giá, 1-5 = số sao
-    comment: '',
-    submitted: false,
-    date: ''
-  },
-  tutorProgress: {
-    studentName: '',
-    studentId: '',
-    strengths: '',
-    weaknesses: '',
-    suggestions: '',
-    overallStatus: '',
-    lastUpdated: ''
-  }
-};
-
-// Placeholder handler functions (replace with actual logic)
-const handleReschedule = (s) => console.log(`Reschedule session ${s.id}`);
-const handleEdit = (s) => console.log(`Edit session ${s.id}`);
-const handleDelete = (s) => console.log(`Delete session ${s.id}`);
-
-// NEW: State management component
-const SessioncardWithFeedback = ({ role = 'student' }) => {
-  const [session, setSession] = React.useState(MOCK_SESSION_DATA);
+const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDelete }) => {
+  // Sync state with props when parent re-renders (e.g. after list refresh)
+  const [session, setSession] = React.useState(sessionData);
   const [showFeedbackForm, setShowFeedbackForm] = React.useState(false);
   const [showProgressTracker, setShowProgressTracker] = React.useState(false);
 
-  // NEW: Feedback submission handler
+  React.useEffect(() => {
+    setSession(sessionData);
+  }, [sessionData]);
+
+    // Inside SessioncardWithFeedback
   const handleFeedbackSubmit = (feedbackData) => {
-    console.log('Feedback submitted:', feedbackData);
-    setSession({
-      ...session,
-      studentFeedback: feedbackData
-    });
+    setSession(prev => ({ ...prev, studentFeedback: feedbackData }));
     setShowFeedbackForm(false);
   };
 
-  // NEW: Progress save handler
   const handleProgressSave = (progressData) => {
-    console.log('Progress saved:', progressData);
-    setSession({
-      ...session,
-      tutorProgress: progressData
-    });
+    setSession(prev => ({ ...prev, tutorProgress: progressData }));
     setShowProgressTracker(false);
   };
 
-  const { title, time, location, capacity, signedUp, studentFeedback, tutorProgress } = session;
+  // Safe defaults
+  const studentFeedback = session.studentFeedback || { submitted: false, rating: 0 };
+  const tutorProgress = session.tutorProgress || { lastUpdated: null };
+  const { title, time, location, capacity, signedUp } = session;
 
   return (
     <div className="session-card">
       <div className="session-details-container">
         <div className="session-details-left">
-          <div className="title">{title}</div>
-          <div className="subtitle-line">
-            <div className="time-and-location">
-              <span>{time}</span>
-              <span>{location}</span>
-            </div>
-            <div className="capacity">
-              {signedUp}/{capacity}
-            </div>
-          </div>
-
-          {/* NEW: Feedback Section */}
+           <div className="title">{title}</div>
+           <div className="subtitle-line">
+             <div className="time-and-location">
+               <span>{time}</span> <span>{location}</span>
+             </div>
+             <div className="capacity">{signedUp}/{capacity}</div>
+           </div>
+           
+                     {/* NEW: Feedback Section */}
           <div className="feedback-section">
             {role === 'student' && (
               <div className="student-feedback">
@@ -147,6 +102,7 @@ const SessioncardWithFeedback = ({ role = 'student' }) => {
             )}
           </div>
         </div>
+        
 
         <div className="action-icons">
           {/* NEW: Add feedback icon for students */}
@@ -166,10 +122,10 @@ const SessioncardWithFeedback = ({ role = 'student' }) => {
               <span onClick={() => setShowProgressTracker(true)} title="Record Progress">
                 📊
               </span>
-              <span onClick={() => handleEdit(session)} title="Edit">
+              <span onClick={() => onEdit?.(session)} title="Edit">
                 ✏️
               </span>
-              <span onClick={() => handleDelete(session)} title="Delete">
+              <span onClick={() => onDelete?.(session)} title="Delete">
                 🗑️
               </span>
             </>
@@ -198,9 +154,15 @@ const SessioncardWithFeedback = ({ role = 'student' }) => {
   );
 }
 
-// Keep the original component for backward compatibility
-const Sessioncard = ({ role = 'student' }) => {
-  return <SessioncardWithFeedback role={role} />;
-}
+const Sessioncard = ({ data, role = 'student', onEdit, onDelete }) => {
+  return (
+    <SessioncardWithFeedback 
+      sessionData={data}
+      role={role}
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
+  );
+};
 
-export default Sessioncard
+export default Sessioncard;

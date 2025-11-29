@@ -4,6 +4,7 @@ import Header from '../../components/Header/Header'
 import Searchbar from '../../components/Searchbar/Searchbar'
 import { useState } from 'react'
 import Searchresultlist from '../../components/Searchbar/Searchresultlist'
+import WeekCalendar from '../../components/WeekCalendar/WeekCalendar'
 
 const Home = () => {
 
@@ -13,6 +14,7 @@ const Home = () => {
       <Header/>
       {/*<Searchbar setResults={setResults}/> 
       <Searchresultlist results={results}/> */}
+      
     </div>
   )
 }

@@ -41,6 +41,10 @@ app.get("/", (req, res) => {
     res.send("API working")
 })
 
+// Error handling (must be after all routes)
+app.use(notFoundHandler);
+app.use(errorHandler);
+
 app.listen(port,() => {
     console.log(`Server started on http://localhost:${port}`);
 })

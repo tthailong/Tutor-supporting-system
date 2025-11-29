@@ -1,0 +1,374 @@
+.automatic-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.auto-content {
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+/* Form Styles */
+.requirements-form-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  text-align: left;
+}
+
+.auto-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header-icon {
+  font-size: 3rem;
+  color: #FFD700;
+  margin-bottom: 0.5rem;
+}
+
+.auto-header h2 {
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.auto-header p {
+  color: #666;
+}
+
+.requirements-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 15px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #4EAAF3;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.submit-btn {
+  background-color: #4EAAF3;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #3b9add;
+}
+
+.back-btn-simple {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.9rem;
+}
+
+/* Matching State */
+.state-matching .spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #4EAAF3;
+  border-radius: 50%;
+  margin: 0 auto 2rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.state-matching h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.state-matching p {
+  color: #666;
+}
+
+/* Success State */
+.state-success {
+  background: white;
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  animation: slideUp 0.5s ease-out;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.state-success .success-icon-large {
+  font-size: 5rem;
+  color: #4CAF50;
+  margin-bottom: 1rem;
+}
+
+.state-success h2 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0 0 1rem 0;
+}
+
+.state-success .match-score-badge {
+  background: #4CAF50;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  display: inline-block;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+/* Failed State */
+.state-failed {
+  background: white;
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  animation: slideUp 0.5s ease-out;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.state-failed .failed-icon-large {
+  font-size: 5rem;
+  color: #e74c3c;
+  margin-bottom: 1rem;
+}
+
+.state-failed h2 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0 0 1.5rem 0;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tutor-preview {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.tutor-avatar-large {
+  font-size: 5rem;
+  color: #4EAAF3;
+  margin: 0 auto 1rem auto;
+  display: flex;
+  justify-content: center;
+}
+
+.tutor-preview h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.tutor-preview .subject {
+  color: #4EAAF3;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.tutor-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.tutor-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.tutor-preview .bio {
+  font-size: 0.9rem;
+  color: #777;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.next-steps {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border-left: 4px solid #4CAF50;
+  text-align: left;
+}
+
+.next-steps h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.next-steps ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.next-steps li {
+  padding: 0.5rem 0;
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.failed-message {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.coordinator-notice {
+  background: #fff3cd;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border-left: 4px solid #ffc107;
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.coordinator-notice h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.coordinator-notice ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.coordinator-notice li {
+  padding: 0.5rem 0;
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.suggestion-text {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #666;
+  font-style: italic;
+}
+
+.suggestion-text strong {
+  color: #333;
+  font-style: normal;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 2rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-primary {
+  background: #4EAAF3;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #3d8fd9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(78, 170, 243, 0.3);
+}
+
+.btn-secondary {
+  background: #f1f1f1;
+  color: #666;
+}
+
+.btn-secondary:hover {
+  background: #e0e0e0;
+}

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -172,10 +173,161 @@
 .btn-cancel:active,
 .btn-submit:active {
     transform: scale(0.98);
+=======
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.awards-container {
+    flex: 1;
+    padding: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.awards-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.awards-header h1 {
+    color: #333;
+    font-size: 28px;
+    margin: 0;
+}
+
+.btn-new-award {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.btn-new-award:hover {
+    background-color: #45a049;
+}
+
+.awards-loading {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+    color: #666;
+}
+
+.awards-list {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.awards-list h2 {
+    color: #333;
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+.no-awards {
+    text-align: center;
+    color: #999;
+    padding: 40px;
+    font-size: 16px;
+}
+
+.no-awards p {
+    margin: 10px 0;
+}
+
+.awards-table-container {
+    overflow-x: auto;
+}
+
+.awards-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.awards-table th,
+.awards-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.awards-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+}
+
+.awards-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+.student-info {
+    line-height: 1.4;
+}
+
+.student-info strong {
+    color: #333;
+}
+
+.student-info small {
+    color: #666;
+    font-size: 12px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.badge.credits {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.amount {
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+.awards-table .actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-edit,
+.btn-delete {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+    transition: transform 0.2s;
+}
+
+.btn-edit:hover,
+.btn-delete:hover {
+    transform: scale(1.2);
+>>>>>>> origin/main
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+<<<<<<< HEAD
     .modal-content {
         width: 95%;
         max-height: 95vh;
@@ -204,5 +356,28 @@
     .btn-cancel,
     .btn-submit {
         width: 100%;
+=======
+    .app-layout {
+        flex-direction: column;
+    }
+
+    .awards-container {
+        padding: 15px;
+    }
+
+    .awards-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .awards-table {
+        font-size: 14px;
+    }
+
+    .awards-table th,
+    .awards-table td {
+        padding: 8px;
+>>>>>>> origin/main
     }
 }
