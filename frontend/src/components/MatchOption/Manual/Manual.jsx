@@ -3,7 +3,6 @@ import './Manual.css';
 import { FaStar, FaUserCircle, FaSearch, FaFilter, FaTimes, FaCheckCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { getTutors, createManualMatchRequest } from '../../../services/apiService';
-import TimeSlotModal from '../TimeSlotModal/TimeSlotModal';
 
 const Manual = () => {
   const navigate = useNavigate();
@@ -55,8 +54,8 @@ const Manual = () => {
 
   const handleSelectClick = (tutor) => {
     setSelectedTutor(tutor);
-    setShowTimeSlotModal(true);
-    //setShowConfirmModal(true);
+    //setShowTimeSlotModal(true);
+    setShowConfirmModal(true);
   };
 
   const handleConfirmSelection = async () => {
@@ -310,31 +309,6 @@ const Manual = () => {
         </div>
       )}
 
-      {/* Time Slot Modal */}
-      {showTimeSlotModal && selectedTutor && (
-        <TimeSlotModal
-          tutor={selectedTutor}
-          onClose={() => setShowTimeSlotModal(false)}
-          onSubmit={async (data) => {
-            setIsSubmitting(true);
-            try {
-              await createManualMatchRequest({
-                tutorId: selectedTutor._id,
-                subject: data.subject,
-                preferredTimeSlots: [data.preferredTimeSlots], // already formatted
-                description: `Manual match for subject ${data.subject}`
-              });
-
-              setShowTimeSlotModal(false);
-              setShowSuccessModal(true);
-            } catch (err) {
-              alert("Failed to create match: " + (err.response?.data?.message || err.message));
-            } finally {
-              setIsSubmitting(false);
-            }
-          }}
-        />
-      )}
 
     </div>
   );
