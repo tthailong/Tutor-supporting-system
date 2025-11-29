@@ -7,6 +7,10 @@ const SelectTimeSlot = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  const requestingStudentId = user?.id;
+
+
   const [loading, setLoading] = useState(true);
   const [availability, setAvailability] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -17,6 +21,11 @@ const SelectTimeSlot = () => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
+        if (!requestingStudentId) {
+          setError("Authentication required.");
+          setLoading(false);
+          return;
+        }
         const res = await fetch(`/api/student/session/${sessionId}/reschedule`);
         const data = await res.json();
 
@@ -35,7 +44,7 @@ const SelectTimeSlot = () => {
     };
 
     fetchOptions();
-  }, [sessionId]);
+  }, [sessionId, requestingStudentId]);
 
   // Xác nhận reschedule
   const handleConfirm = async () => {
@@ -44,19 +53,32 @@ const SelectTimeSlot = () => {
       return;
     }
 
+    const isAvailabilityRequest = selectedOption.type === "availability";
+    
+    // Use a different endpoint for requests if possible, 
+    // or modify the payload's type to 'request'
+    let endpoint = `/api/student/session/${sessionId}/reschedule`;
+    let method = "PUT";
+
+    if (isAvailabilityRequest) {
+        if (!window.confirm("This will send a rescheduling request to your tutor for approval. Proceed?")) return;
+    }
+
     let payload = {};
 
     if (selectedOption.type === "availability") {
       payload = {
-        type: "availability",
+        type: "availability_request",
         date: selectedOption.date,
         start: selectedOption.start,
-        end: selectedOption.end
+        end: selectedOption.end,
+        requestingStudentId: requestingStudentId
       };
     } else if (selectedOption.type === "session") {
       payload = {
-        type: "session",
-        newSessionId: selectedOption.sessionId
+        type: "session_move",
+        newSessionId: selectedOption.sessionId,
+        requestingStudentId: requestingStudentId
       };
     }
 
@@ -69,7 +91,7 @@ const SelectTimeSlot = () => {
 
       const data = await res.json();
       if (data.success) {
-        alert("Rescheduled successfully!");
+        alert(isAvailabilityRequest ? "Rescheduling request sent successfully!" : "Rescheduled successfully!");
         navigate("/studentviewcourse");
       } else {
         alert(data.message);

@@ -129,7 +129,7 @@ export const getAvailableRescheduleSlots = async (req, res) => {
 export const rescheduleSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { type, date, start, end, newSessionId } = req.body;
+    const { type, date, start, end, newSessionId} = req.body; // type is now 'availability_request' or 'session_move'
 
     const session = await Session.findById(sessionId)
       .populate("tutor", "name bookedSlots availability")
@@ -140,179 +140,178 @@ export const rescheduleSession = async (req, res) => {
     const tutor = session.tutor;
     const student = session.students[0];
     const studentId = student._id;
-
     // ===========================================================
     // CASE A: Reschedule theo availability
     // ===========================================================
-    if (type === "availability") {
+      if (type === "availability_request") {
 
-      const oldDate = Array.from(session.schedule.keys())[0];
+        const oldDate = Array.from(session.schedule.keys())[0];
 
-      // 1. Remove bookedSlot cũ
-      //const oldBooked = tutor.bookedSlots.get(oldDate) || [];
-      //tutor.bookedSlots.set(
-      //  oldDate,
-      // oldBooked.filter(b => String(b.sessionId) !== String(sessionId))
-      //);
+        // 1. Remove bookedSlot cũ
+        //const oldBooked = tutor.bookedSlots.get(oldDate) || [];
+        //tutor.bookedSlots.set(
+        //  oldDate,
+        // oldBooked.filter(b => String(b.sessionId) !== String(sessionId))
+        //);
 
-      // 2. Add bookedSlot mới
-      const bookedList = tutor.bookedSlots.get(date) || [];
-      bookedList.push({ start, end, sessionId: session._id });
-      tutor.bookedSlots.set(date, bookedList);
+        // 2. Add bookedSlot mới
+        const bookedList = tutor.bookedSlots.get(date) || [];
+        bookedList.push({ start, end, sessionId: session._id });
+        tutor.bookedSlots.set(date, bookedList);
 
-      // 3. Remove availability đã dùng
-      const avList = tutor.availability.get(date) || [];
-      tutor.availability.set(
-        date,
-        avList.filter(a => !(a.start === start && a.end === end))
-      );
+        // 3. Remove availability đã dùng
+        const avList = tutor.availability.get(date) || [];
+        tutor.availability.set(
+          date,
+          avList.filter(a => !(a.start === start && a.end === end))
+        );
 
-      // 4. Update schedule
-      session.schedule = new Map([[date, [{ start, end }]]]);
-      session.status = "Rescheduled";
+        // 4. Update schedule
+        session.schedule = new Map([[date, [{ start, end }]]]);
+        session.status = "Rescheduled";
 
-      await tutor.save();
-      await session.save();
+        await tutor.save();
+        await session.save();
 
-      // 🔔 Notification
-      await sendNoti(
-        tutor._id,
-        "Student Rescheduled a Session",
-        `${student.name} rescheduled their session to ${date} ${start}-${end}.`
-      );
+        // 🔔 Notification
+        await sendNoti(
+          tutor._id,
+          "Student Rescheduled a Session",
+          `${student.name} rescheduled their session to ${date} ${start}-${end}.`
+        );
 
-      await sendNoti(
-        student._id,
-        "Session Rescheduled Successfully",
-        `Your session with ${tutor.name} is moved to ${date} ${start}-${end}.`
-      );
+        await sendNoti(
+          student._id,
+          "Session Rescheduled Successfully",
+          `Your session with ${tutor.name} is moved to ${date} ${start}-${end}.`
+        );
 
-      return res.status(200).json({
-        success: true,
-        message: "Session rescheduled to availability slot",
-        session
-      });
+        return res.status(200).json({
+          success: true,
+          message: "Session rescheduled to availability slot",
+          session
+        });
+      }
+
+      // ===========================================================
+      // CASE B: Move student to another session
+      // ===========================================================
+      if (type === "session") {
+
+        const newSession = await Session.findById(newSessionId)
+          .populate("students", "name")
+          .populate("tutor", "name bookedSlots availability");
+
+        if (!newSession)
+          return res.status(404).json({ message: "Target session not found" });
+
+        if (newSession.students.length >= newSession.capacity)
+          return res.status(400).json({ message: "Target session full" });
+
+        // 1. Remove student from old session
+        session.students = session.students.filter(s => String(s._id) !== String(studentId));
+        await session.save();
+
+        // 2. Remove old bookedSlot
+        const oldDate = Array.from(session.schedule.keys())[0];
+        const oldBooked = tutor.bookedSlots.get(oldDate) || [];
+        tutor.bookedSlots.set(
+          oldDate,
+          oldBooked.filter(b => String(b.sessionId) !== String(sessionId))
+        );
+        await tutor.save();
+
+        // 3. Add student to new session
+        newSession.students.push(studentId);
+        await newSession.save();
+
+        // 🔔 Notification
+        await sendNoti(
+          newSession.tutor._id,
+          "A Student Joined Your Session",
+          `${student.name} joined your session: ${newSession.subject}.`
+        );
+
+        await sendNoti(
+          tutor._id,
+          "Student Left Your Session",
+          `${student.name} left your session: ${session.subject}.`
+        );
+
+        const newDate = Array.from(newSession.schedule.keys())[0];
+
+        await sendNoti(
+          student._id,
+          "Session Rescheduled",
+          `You have been moved to session "${newSession.subject}" on ${newDate}.`
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: "Student moved to new session",
+          newSessionId
+        });
+      }
+
+      return res.status(400).json({ message: "Invalid type" });
+
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: err.message });
     }
+  };
 
-    // ===========================================================
-    // CASE B: Move student to another session
-    // ===========================================================
-    if (type === "session") {
-
-      const newSession = await Session.findById(newSessionId)
-        .populate("students", "name")
-        .populate("tutor", "name bookedSlots availability");
-
-      if (!newSession)
-        return res.status(404).json({ message: "Target session not found" });
-
-      if (newSession.students.length >= newSession.capacity)
-        return res.status(400).json({ message: "Target session full" });
-
-      // 1. Remove student from old session
-      session.students = session.students.filter(s => String(s._id) !== String(studentId));
-      await session.save();
-
-      // 2. Remove old bookedSlot
-      const oldDate = Array.from(session.schedule.keys())[0];
-      const oldBooked = tutor.bookedSlots.get(oldDate) || [];
-      tutor.bookedSlots.set(
-        oldDate,
-        oldBooked.filter(b => String(b.sessionId) !== String(sessionId))
-      );
-      await tutor.save();
-
-      // 3. Add student to new session
-      newSession.students.push(studentId);
-      await newSession.save();
-
-      // 🔔 Notification
-      await sendNoti(
-        newSession.tutor._id,
-        "A Student Joined Your Session",
-        `${student.name} joined your session: ${newSession.subject}.`
-      );
-
-      await sendNoti(
-        tutor._id,
-        "Student Left Your Session",
-        `${student.name} left your session: ${session.subject}.`
-      );
-
-      const newDate = Array.from(newSession.schedule.keys())[0];
-
-      await sendNoti(
-        student._id,
-        "Session Rescheduled",
-        `You have been moved to session "${newSession.subject}" on ${newDate}.`
-      );
-
-      return res.status(200).json({
-        success: true,
-        message: "Student moved to new session",
-        newSessionId
-      });
-    }
-
-    return res.status(400).json({ message: "Invalid type" });
-
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: err.message });
-  }
-};
-
-// ===================================================================
-// 4. CANCEL SESSION
-// ===================================================================
-export const cancelStudentCourse = async (req, res) => {
-  try {
+  // ===================================================================
+  // 4. CANCEL SESSION
+  // ===================================================================
+  export const cancelStudentCourse = async (req, res) => {
+    try {
       const { sessionId, studentId } = req.params;
 
-    const session = await Session.findById(sessionId)
-      .populate("tutor", "name bookedSlots availability")
-      .populate("students", "name");
+      const session = await Session.findById(sessionId)
+        .populate("tutor", "name bookedSlots availability")
+        .populate("students", "name");
 
-    if (!session) return res.status(404).json({ message: "Session not found" });
+      if (!session) return res.status(404).json({ message: "Session not found" });
 
-    const student = session.students.find(s => String(s._id) === String(studentId));
-    if (!student)
-      return res.status(400).json({ message: "Student not in session" });
+      const student = session.students.find(s => String(s._id) === String(studentId));
+      if (!student)
+        return res.status(400).json({ message: "Student not in session" });
 
-    // 1. Remove student from session
-    session.students = session.students.filter(
-      s => String(s._id) !== String(studentId)
-    );
-    await session.save();
-
-    // 2. Remove booked slot
-    const dates = Array.from(session.schedule.keys());
-    dates.forEach(date => {
-      const booked = session.tutor.bookedSlots.get(date) || [];
-      session.tutor.bookedSlots.set(
-        date,
-        booked.filter(b => String(b.sessionId) !== String(sessionId))
+      // 1. Remove student from session
+      session.students = session.students.filter(
+        s => String(s._id) !== String(studentId)
       );
-    });
-    await session.tutor.save();
+      await session.save();
 
-    // 🔔 Notification
-    await sendNoti(
-      session.tutor._id,
-      "Student Cancelled Session",
-      `${student.name} cancelled the session: ${session.subject}.`
-    );
+      // 2. Remove booked slot
+      const dates = Array.from(session.schedule.keys());
+      dates.forEach(date => {
+        const booked = session.tutor.bookedSlots.get(date) || [];
+        session.tutor.bookedSlots.set(
+          date,
+          booked.filter(b => String(b.sessionId) !== String(sessionId))
+        );
+      });
+      await session.tutor.save();
 
-    await sendNoti(
-      student._id,
-      "Session Cancelled",
-      `You have cancelled your session with tutor ${session.tutor.name}.`
-    );
+      // 🔔 Notification
+      await sendNoti(
+        session.tutor._id,
+        "Student Cancelled Session",
+        `${student.name} cancelled the session: ${session.subject}.`
+      );
 
-    return res.status(200).json({ success: true, message: "Course canceled" });
+      await sendNoti(
+        student._id,
+        "Session Cancelled",
+        `You have cancelled your session with tutor ${session.tutor.name}.`
+      );
 
-  } catch (err) {
+      return res.status(200).json({ success: true, message: "Course canceled" });
+
+    } catch (err) {
       console.error("Error during cancelStudentCourse:", err);
       return res.status(500).json({ message: err.message });
-  }
-};
+    }
+  };

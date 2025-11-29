@@ -1,5 +1,10 @@
 import Session from "../models/sessionModel.js";
 import Tutor from "../models/tutorModel.js";
+import Registration from "../models/registrationModel.js";
+import mongoose from "mongoose";
+import Notification from "../models/notificationModel.js"; // Assuming you have this model
+import User from "../models/User.js";
+import Student from "../models/studentModel.js";
 
 // Helper: 07:00 -> 700
 const parseTime = (t) => parseInt(t.replace(":", ""));
@@ -9,7 +14,7 @@ const parseTime = (t) => parseInt(t.replace(":", ""));
 // ---------------------------------------------------
 export const createSession = async (req, res) => {
   try {
-    const { tutorId, subject, location, schedule, duration, capacity, description } = req.body;
+    const { tutorId, subject, location, schedule, duration, capacity, description, registrationId, studentIdToEnroll } = req.body;
 
     // --------------------------
     // 1. Validate tutor exists
@@ -21,7 +26,7 @@ export const createSession = async (req, res) => {
     // 2. Temporarily build session to extract dates
     // --------------------------
     const tempSession = new Session({ schedule, duration, startDate: new Date() });
-    const newSessionDates = tempSession.getSessionDates(); 
+    const newSessionDates = tempSession.getSessionDates();
     // -> [{ date: DateObj, start: "08:00", end: "10:00" }, ...]
 
 
@@ -55,6 +60,18 @@ export const createSession = async (req, res) => {
     // --------------------------
     const expandedSchedule = new Map();
 
+    let initialStudents = [];
+    if (studentIdToEnroll) {
+      // Find the Student Profile document where the userId field matches the ID passed from the notification
+      const studentProfile = await Student.findOne({ userId: studentIdToEnroll });
+
+      if (!studentProfile) {
+        return res.status(404).json({ message: "Student profile not found for enrollment." });
+      }
+
+      // 🛑 Use the Student Profile's primary ID (Student._id)
+      initialStudents.push(studentProfile._id);
+    }
     // Get the start date from the original schedule
     const originalDates = Object.keys(schedule).sort(); // e.g., ["2025-11-28"]
     const durationWeeks = duration || 1;
@@ -77,7 +94,8 @@ export const createSession = async (req, res) => {
       duration,
       startDate: newSessionDates.length ? newSessionDates[0].date : new Date(),
       capacity,
-      description
+      description,
+      students: initialStudents,
     });
 
     await newSession.save();
@@ -133,9 +151,47 @@ export const createSession = async (req, res) => {
     // --------------------------
     await tutor.save();
 
+    // 🛑 UPDATE REGISTRATION STATUS IF THIS CAME FROM A MATCH REQUEST
+    let registration;
+    if (registrationId) {
+      // ... (update registration logic) ...
+      const Registration = mongoose.model('Registration');
+      registration = await Registration.findById(registrationId);
+      if (registration) {
+        registration.status = "Matched";
+        registration.matchedSessionId = newSession._id;
+        await registration.save();
+      }
+    }
 
     // --------------------------
-    // 8. Response
+    // 🛑 STEP 8: NOTIFY STUDENT OF MATCH SUCCESS
+    // --------------------------
+    if (registrationId && registration) {
+      const tutorUser = await User.findById(tutor.userId); // Fetch User document linked to tutor
+
+      await Notification.create({
+        // Send to the student's User ID
+        user: studentIdToEnroll,
+        title: "Match Confirmed!",
+        message: `Your tutor ${tutor.name} has confirmed your session for ${subject}.`,
+        type: "MATCH_SUCCESS",
+        relatedSession: newSession._id,
+        metadata: {
+          tutorName: tutor.name,
+          subject: subject,
+          date: newSessionDates[0].date.toISOString().split("T")[0],
+          startTime: newSessionDates[0].start,
+          endTime: newSessionDates[0].end
+        }
+      });
+
+      // Optional: Mark the original notification as read if you kept that logic
+      // E.g., if you pass notificationId, you can mark it read here too.
+    }
+
+    // --------------------------
+    // 9. Response
     // --------------------------
     return res.status(201).json({
       success: true,
@@ -157,16 +213,16 @@ export const getSessionsByTutor = async (req, res) => {
       .sort({ startDate: 1 });
 
     // Return in consistent format with 'data' field
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       count: sessions.length,
-      data: sessions 
+      data: sessions
     });
   } catch (error) {
     console.error("Get sessions by tutor error:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: error.message 
+      message: error.message
     });
   }
 };
@@ -248,9 +304,9 @@ export const updateSession = async (req, res) => {
   }
 };
 
-  // ---------------------------------------------------
-  // 4. DELETE SESSION
-  // ---------------------------------------------------
+// ---------------------------------------------------
+// 4. DELETE SESSION
+// ---------------------------------------------------
 export const deleteSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -272,15 +328,15 @@ export const deleteSession = async (req, res) => {
       $pull: { bookedSlots: { sessionId: sessionId } }
     });
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
-      message: "Session deleted successfully" 
+      message: "Session deleted successfully"
     });
 
   } catch (error) {
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
-      message: error.message 
+      message: error.message
     });
   }
 };

@@ -3,7 +3,7 @@ import registrationModel from "../models/registrationModel.js";
 import sessionModel from "../models/sessionModel.js";
 import tutorModel from "../models/tutorModel.js";
 import User from "../models/User.js";
-
+import asyncHandler from "express-async-handler";
 
 // GET: Lấy tất cả thông báo của 1 user
 export const getNotifications = async (req, res) => {

@@ -74,8 +74,14 @@ const WeekCalendar = () => {
     return days;
   }, [currentDate]);
 
+  const formatDateKey = (date) => {
+    const year = date.getFullYear();
+    // getMonth() returns 0-11, so add 1 and pad to 2 digits
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   // Format helpers
-  const formatDateKey = (date) => date.toISOString().split('T')[0]; // YYYY-MM-DD
   const formatHeaderDate = (date) => date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   // --- Handlers ---
