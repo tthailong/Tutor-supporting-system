@@ -267,7 +267,7 @@ export const rescheduleSession = async (req, res) => {
 // ===================================================================
 export const cancelStudentCourse = async (req, res) => {
   try {
-    const { sessionId, studentId } = req.params;
+      const { sessionId, studentId } = req.params;
 
     const session = await Session.findById(sessionId)
       .populate("tutor", "name bookedSlots availability")
@@ -312,6 +312,7 @@ export const cancelStudentCourse = async (req, res) => {
     return res.status(200).json({ success: true, message: "Course canceled" });
 
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+      console.error("Error during cancelStudentCourse:", err);
+      return res.status(500).json({ message: err.message });
   }
 };

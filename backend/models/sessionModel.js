@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import User from "./User.js";
 import SessionEvaluation from "./sessionEvaluationModel.js";
 import StudentProgress from "./studentProgressModel.js";
+import studentModel from "./studentModel.js";
 // --------------------
 // TIME ENUM (Same as Tutor)
 // --------------------
@@ -75,7 +76,7 @@ const sessionSchema = new mongoose.Schema({
   capacity: { type: Number, required: true },
   description: { type: String },
 
-  students: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], 
+  students: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student" }], 
 
   evaluations: [{ 
     type: mongoose.Schema.Types.ObjectId, 

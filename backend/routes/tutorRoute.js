@@ -5,9 +5,6 @@ import { validateTutorFilters } from "../validators/matchingValidator.js";
 
 const tutorRouter = express.Router();
 
-// Get all tutors with filtering (Marketplace)
-tutorRouter.get("/", validateTutorFilters, getTutors);
-
 // Get specific tutor data
 tutorRouter.get("/:tutorId", getTutorData);
 // Get all tutors with filtering (Marketplace)

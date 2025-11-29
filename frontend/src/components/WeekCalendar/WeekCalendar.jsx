@@ -131,7 +131,7 @@ const WeekCalendar = () => {
   };
 
   const handleSubmit = async () => {
-    const availabilityPayload = compressSlots(availabilityState, weekDays);
+    const availabilityPayload = preparePayload();
   
     const payload = {
       tutorId: TUTOR_ID, 
@@ -316,8 +316,8 @@ const WeekCalendar = () => {
 
         {/* --- Footer Actions --- */}
         <div className='calendar-footer'>
-          <button onClick={handleDelete} className='btn-text delete'>Clear All</button>
-          <button onClick={handleSubmit} className='btn-primary'>Save Schedule</button>
+          {/*<button onClick={handleDelete} className='btn-text delete'>Clear All</button>*/}
+          <button onClick={handleSubmit} className='btn-primary'>Set availability</button>
         </div>
 
       </div>

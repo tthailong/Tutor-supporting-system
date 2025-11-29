@@ -9,12 +9,10 @@
     max-width: 800px;
     /* Constrain the size as seen in the image */
     margin: 20px auto;
-    /* Center the component */
     position: relative;
-    left: 50%;
+    left: 55%;
     /* move left edge to center */
     transform: none;
-    /* truly center the content */
     padding-bottom: 100px;
 }
 
