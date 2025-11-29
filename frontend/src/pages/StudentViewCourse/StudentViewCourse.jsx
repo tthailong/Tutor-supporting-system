@@ -6,6 +6,10 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 const CourseCard = ({ course, studentId, onCancelSuccess }) => {
   const navigate = useNavigate();
 
+  const dates = Object.keys(course.schedule);
+  const firstDate = dates[0];
+  const firstSlot = course.schedule[firstDate][0];
+
   const handleReschedule = () => {
     navigate(`/selecttimeslot/${course._id}`);
   };
@@ -39,10 +43,7 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
       <h3>{course.subject}</h3>
       <p>Tutor: {course.tutor?.name}</p>
       <p>
-        Time:{" "}
-        {Array.from(course.schedule.keys())[0]}{" "}
-        {course.schedule.get(Array.from(course.schedule.keys())[0])[0].start} -{" "}
-        {course.schedule.get(Array.from(course.schedule.keys())[0])[0].end}
+        Time: {firstDate} {firstSlot.start} - {firstSlot.end}
       </p>
       <p className="room">Room: {course.location}</p>
 
@@ -60,7 +61,10 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
 
 const StudentViewCourse = () => {
   const [courses, setCourses] = useState([]);
-  const studentId = "677123abc123"; // ❗THAY BẰNG ID STUDENT ĐANG LOGIN
+  //const studentId = "677123abc123"; // ❗THAY BẰNG ID STUDENT ĐANG LOGIN
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const studentId = user?.studentProfile;
 
   const fetchMyCourses = async () => {
     try {

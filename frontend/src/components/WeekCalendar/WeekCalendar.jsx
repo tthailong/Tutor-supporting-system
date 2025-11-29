@@ -131,7 +131,7 @@ const WeekCalendar = () => {
   };
 
   const handleSubmit = async () => {
-    const availabilityPayload = compressSlots(availabilityState, weekDays);
+    const availabilityPayload = preparePayload();
   
     const payload = {
       tutorId: TUTOR_ID, 

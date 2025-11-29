@@ -3,86 +3,139 @@ import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import User from "./models/User.js";
 import Tutor from "./models/tutorModel.js";
+import Student from "./models/studentModel.js";
 
 dotenv.config();
 
-const createSampleTutorsLinked = async () => {
+const createSampleUsers = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("DB Connected\n");
+    console.log("✅ DB Connected\n");
 
-    // Clean old data
-    await User.deleteMany({ role: "Tutor" });
+    // CLEAN OLD DATA
+    await User.deleteMany({});
     await Tutor.deleteMany({});
-    console.log("Old tutor users and tutor profiles cleared.\n");
+    await Student.deleteMany({});
+    console.log("🧹 Cleared old users, tutors, students.\n");
 
-    // Hash password
     const hashed = await bcrypt.hash("123456", 10);
 
-    // Define sample tutor accounts
-    const tutorAccounts = [
+    // -----------------------------
+    // 1) CREATE TUTORS
+    // -----------------------------
+    const tutorData = [
       {
         email: "tutor001@hcmut.edu.vn",
         fullname: "Đặng Bảo Trọng",
-        phoneNumber: "0123456789",
+        phone: "0123456789",
         expertise: ["General Chemistry"],
-        description: "Tutor General Chemistry"
+        description: "General Chemistry Tutor"
       },
       {
         email: "tutor002@hcmut.edu.vn",
         fullname: "Nguyễn Văn A",
-        phoneNumber: "0987654321",
+        phone: "0987654321",
         expertise: ["Physics 1", "Mechanics"],
-        description: "Physics specialist"
+        description: "Physics Specialist"
       },
       {
         email: "tutor003@hcmut.edu.vn",
         fullname: "Trần Thị B",
-        phoneNumber: "0912345678",
+        phone: "0912345678",
         expertise: ["Calculus A1"],
-        description: "Math tutor"
+        description: "Math Tutor"
       }
     ];
 
-    // Process each tutor
-    for (const t of tutorAccounts) {
-      // 1️⃣ Create USER with role Tutor
+    const tutorUsers = [];
+
+    for (const t of tutorData) {
       const user = await User.create({
         email: t.email,
         passwordHash: hashed,
         role: "Tutor",
         fullname: t.fullname,
-        phoneNumber: t.phoneNumber,
+        phoneNumber: t.phone,
         status: true
       });
 
-      // 2️⃣ Create TUTOR linked with userId
-      const tutor = await Tutor.create({
+      const tutorProfile = await Tutor.create({
         userId: user._id,
         name: t.fullname,
-        phone: t.phoneNumber,
+        phone: t.phone,
         expertise: t.expertise,
         description: t.description,
         availability: {},
         bookedSlots: {}
       });
 
-      // 3️⃣ Update user → set tutorProfile
-      user.tutorProfile = tutor._id;
+      user.tutorProfile = tutorProfile._id;
       await user.save();
 
-      console.log(`Tutor created: ${t.fullname}`);
-      console.log(`User ID: ${user._id}`);
-      console.log(`Tutor ID: ${tutor._id}\n`);
+      tutorUsers.push(user);
+      console.log(`✅ Created Tutor: ${t.fullname}`);
     }
 
-    console.log("All tutors created successfully!");
+    // -----------------------------
+    // 2) CREATE STUDENTS
+    // -----------------------------
+    const studentData = [
+      {
+        email: "student001@hcmut.edu.vn",
+        fullname: "Student One",
+        phone: "0901000001",
+        hcmutID: "2110001"
+      },
+      {
+        email: "student002@hcmut.edu.vn",
+        fullname: "Student Two",
+        phone: "0901000002",
+        hcmutID: "2110002"
+      },
+      {
+        email: "student003@hcmut.edu.vn",
+        fullname: "Student Three",
+        phone: "0901000003",
+        hcmutID: "2110003"
+      }
+    ];
+
+    const studentUsers = [];
+
+    for (const s of studentData) {
+      const user = await User.create({
+        email: s.email,
+        passwordHash: hashed,
+        role: "Student",
+        fullname: s.fullname,
+        phoneNumber: s.phone,
+        hcmutID: s.hcmutID
+      });
+
+      const studentProfile = await Student.create({
+        userId: user._id,
+        name: s.fullname,
+        phone: s.phone,
+        hcmutID: s.hcmutID,
+        description: ""
+      });
+
+      user.studentProfile = studentProfile._id;
+      await user.save();
+
+      studentUsers.push(user);
+      console.log(`🎓 Created Student: ${s.fullname}`);
+    }
+
+    console.log("\n🎉 Perfect! All tutors and students created.");
+
+    return { tutorUsers, studentUsers };
 
   } catch (err) {
-    console.error("ERROR:", err.message);
+    console.error("❌ ERROR:", err.message);
   } finally {
     mongoose.connection.close();
   }
 };
 
-createSampleTutorsLinked();
+createSampleUsers();
