@@ -316,8 +316,8 @@ const WeekCalendar = () => {
 
         {/* --- Footer Actions --- */}
         <div className='calendar-footer'>
-          <button onClick={handleDelete} className='btn-text delete'>Clear All</button>
-          <button onClick={handleSubmit} className='btn-primary'>Save Schedule</button>
+          {/*<button onClick={handleDelete} className='btn-text delete'>Clear All</button>*/}
+          <button onClick={handleSubmit} className='btn-primary'>Set availability</button>
         </div>
 
       </div>
