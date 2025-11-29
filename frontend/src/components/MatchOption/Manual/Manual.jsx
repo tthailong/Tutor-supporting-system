@@ -9,7 +9,8 @@ const Manual = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
   const [selectedDay, setSelectedDay] = useState("Any Day");
-  
+  const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
+
   // API state
   const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -53,6 +54,7 @@ const Manual = () => {
 
   const handleSelectClick = (tutor) => {
     setSelectedTutor(tutor);
+    //setShowTimeSlotModal(true);
     setShowConfirmModal(true);
   };
 
@@ -306,6 +308,8 @@ const Manual = () => {
           </div>
         </div>
       )}
+
+
     </div>
   );
 };

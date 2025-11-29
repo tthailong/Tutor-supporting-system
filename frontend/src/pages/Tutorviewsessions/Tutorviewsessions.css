@@ -12,3 +12,22 @@
     min-height: 100%;
     flex-shrink: 0;
 }
+  @media (max-width: 768px) {
+    .tutorviewsessions-page {
+    flex-direction: column;
+    height: auto;
+    }
+    
+    .tutorviewsessions-page .sidebar {
+        width: 100%;
+        height: auto;
+    }
+    
+    .sessionlist-centered {
+        position: static;
+        transform: none;
+        width: 100%;
+        padding: 10px;
+    }
+    
+    }
