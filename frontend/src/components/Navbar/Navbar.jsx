@@ -30,7 +30,7 @@ const Navbar = () => {
             </Link>
             <div className="navbar-noti">
                 <img src={assets.account}  alt="" />
-            </div>
+            </Link>
         </div>
     </div>
   )

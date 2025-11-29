@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+//import User from "./userModel.js";
 
 // --------------------
 // TIME ENUM
@@ -84,10 +85,39 @@ const bookedSlotSchema = new mongoose.Schema({
 // TUTOR SCHEMA
 // --------------------
 const tutorSchema = new mongoose.Schema({
+  // Link to User account
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: false  // Optional for backwards compatibility
+  },
+  
   name: { type: String, required: true },
   phone: { type: String, required: true },
   expertise: { type: [String], required: true },
   description: { type: String },
+  
+  // Matching module fields
+  bio: {
+    type: String,
+    default: ""
+  },
+  rating: {
+    type: Number,
+    default: 5.0,
+    min: 0,
+    max: 5
+  },
+  totalSessions: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  activeStudents: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
 
   // Key-based dynamic availability: "YYYY-MM-DD": [timeslots]
   availability: {
@@ -118,6 +148,35 @@ tutorSchema.pre("save", function (next) {
 
   next();
 });
+
+// --------------------
+// INSTANCE METHODS (for matching module)
+// --------------------
+
+// Update tutor rating
+tutorSchema.methods.updateRating = function(newRating) {
+  const totalRatings = this.totalSessions || 0;
+  if (totalRatings > 0) {
+    this.rating = ((this.rating * totalRatings) + newRating) / (totalRatings + 1);
+  } else {
+    this.rating = newRating;
+  }
+  return this.rating;
+};
+
+// Increment active students count
+tutorSchema.methods.incrementActiveStudents = function() {
+  this.activeStudents = (this.activeStudents || 0) + 1;
+  return this.activeStudents;
+};
+
+// Decrement active students count
+tutorSchema.methods.decrementActiveStudents = function() {
+  if (this.activeStudents > 0) {
+    this.activeStudents -= 1;
+  }
+  return this.activeStudents;
+};
 
 
 // --------------------

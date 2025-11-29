@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './Automatic.css';
 import { FaCog, FaCheckCircle, FaTimesCircle, FaUserCircle, FaArrowRight } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { MOCK_TUTORS } from '../../../data/mockTutors';
+import { autoMatch } from '../../../services/apiService';
 
 const Automatic = () => {
   const navigate = useNavigate();
@@ -15,6 +15,8 @@ const Automatic = () => {
     additionalNotes: ''
   });
   const [matchedTutor, setMatchedTutor] = useState(null);
+  const [matchScore, setMatchScore] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,40 +33,36 @@ const Automatic = () => {
     startMatching();
   };
 
-  const startMatching = () => {
-    // Simulate algorithm delay
-    setTimeout(() => {
-      // Logic to find a match from MOCK_TUTORS
-      // 1. Filter by Subject (fuzzy match)
-      // 2. Filter by Availability (exact match or "Anytime")
-      
-      const candidates = MOCK_TUTORS.filter(tutor => {
-        const subjectMatch = tutor.subject.toLowerCase().includes(formData.subject.toLowerCase());
-        const availabilityMatch = formData.availability === "Anytime" || 
-                                  formData.availability === "Weekdays" || // Simplified logic: assume all tutors are weekdays for now or check specific day
-                                  tutor.availability === formData.availability;
-        
-        // For this mock, let's be lenient on availability if it's "Weekdays" or "Anytime"
-        // If user picks specific day (e.g. Monday), we try to match.
-        // But our form has "Weekdays", "Weekends" etc.
-        // Let's just match subject primarily for the demo.
-        return subjectMatch;
+  const startMatching = async () => {
+    try {
+      const response = await autoMatch({
+        subject: formData.subject,
+        description: formData.topic || `Help with ${formData.subject}`,
+        availableTimeSlots: [
+          {
+            dayOfWeek: formData.availability,
+            startTime: "09:00",
+            endTime: "11:00"
+          }
+        ],
+        priorityLevel: "High"
       });
 
-      if (candidates.length > 0) {
-        // Pick the best rated one or random
-        const bestMatch = candidates.reduce((prev, current) => (prev.rating > current.rating) ? prev : current);
-        setMatchedTutor(bestMatch);
+      // Check if match was successful
+      if (response.data.registration.status === 'Matched') {
+        setMatchedTutor(response.data.matchedTutor);
+        setMatchScore(response.data.matchScore);
         setStep('success');
       } else {
-        // Fallback if no exact subject match found, maybe pick a random high rated one or show fail
-        // For demo purposes, let's just pick a random one if no subject match, 
-        // OR show a "No match found" state.
-        // Let's show a "No match found" state to be realistic.
-        setMatchedTutor(null);
+        // Coordinator Review
+        setErrorMessage(response.data.message || 'No suitable match found');
         setStep('failed');
       }
-    }, 3000);
+    } catch (error) {
+      console.error('Auto-match error:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to find a match');
+      setStep('failed');
+    }
   };
 
   const handleAccept = () => {
@@ -76,6 +74,7 @@ const Automatic = () => {
     if (window.confirm("Are you sure you want to reject this match? We can try again.")) {
       setStep('form'); 
       setMatchedTutor(null);
+      setMatchScore(0);
     }
   };
 
@@ -93,13 +92,13 @@ const Automatic = () => {
             
             <form onSubmit={handleSubmitForm} className="requirements-form">
               <div className="form-group">
-                <label>Subject (e.g., CS101, Calculus)*</label>
+                <label>Subject (e.g., Physics 1, Calculus A1)*</label>
                 <input 
                   type="text" 
                   name="subject" 
                   value={formData.subject} 
                   onChange={handleInputChange} 
-                  placeholder="Enter course code or name"
+                  placeholder="Enter subject name"
                   required
                 />
               </div>
@@ -111,7 +110,7 @@ const Automatic = () => {
                   name="topic" 
                   value={formData.topic} 
                   onChange={handleInputChange} 
-                  placeholder="e.g., Recursion, Integration"
+                  placeholder="e.g., Derivatives, Integration"
                 />
               </div>
 
@@ -119,12 +118,13 @@ const Automatic = () => {
                 <label>Preferred Availability*</label>
                 <select name="availability" value={formData.availability} onChange={handleInputChange} required>
                   <option value="">Select a day...</option>
-                  <option value="Monday">Monday</option>
-                  <option value="Tuesday">Tuesday</option>
-                  <option value="Wednesday">Wednesday</option>
-                  <option value="Thursday">Thursday</option>
-                  <option value="Friday">Friday</option>
-                  <option value="Anytime">Anytime</option>
+                  <option value="Mon">Monday</option>
+                  <option value="Tue">Tuesday</option>
+                  <option value="Wed">Wednesday</option>
+                  <option value="Thu">Thursday</option>
+                  <option value="Fri">Friday</option>
+                  <option value="Sat">Saturday</option>
+                  <option value="Sun">Sunday</option>
                 </select>
               </div>
 
@@ -157,39 +157,92 @@ const Automatic = () => {
 
         {step === 'success' && matchedTutor && (
           <div className="state-success">
-            <h2>Match Found!</h2>
-            <div className="match-card">
-              <div className="match-avatar">
-                <FaUserCircle />
+            <div className="success-icon-large">
+              <FaCheckCircle />
+            </div>
+            <h2>Perfect Match Found!</h2>
+            <div className="match-score-badge">
+              Match Score: {matchScore} / 17 points
+            </div>
+            
+            <div className="tutor-preview">
+              <div className="tutor-avatar-large">
+                <img 
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(matchedTutor.name)}&size=150&background=4CAF50&color=fff&bold=true`}
+                  alt={matchedTutor.name}
+                  style={{
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '3px solid #4CAF50'
+                  }}
+                />
               </div>
               <h3>{matchedTutor.name}</h3>
-              <p className="match-subject">{matchedTutor.subject}</p>
-              <div className="match-meta">
-                 <span>Available: {matchedTutor.availability}</span>
-                 <span>Rating: {matchedTutor.rating} ⭐</span>
+              <p className="subject">{matchedTutor.expertise?.join(', ')}</p>
+              <div className="tutor-stats">
+                <div className="stat">
+                  <FaStar style={{ color: '#ffd700' }} />
+                  <span>{matchedTutor.rating} Rating</span>
+                </div>
               </div>
-              <p className="match-bio">{matchedTutor.bio}</p>
-              <div className="match-actions">
-                <button className="accept-btn" onClick={handleAccept}>
-                  <FaCheckCircle /> Accept
-                </button>
-                <button className="reject-btn" onClick={handleReject}>
-                  <FaTimesCircle /> Reject
-                </button>
-              </div>
+              <p className="bio">{matchedTutor.bio}</p>
+            </div>
+            
+            <div className="next-steps">
+              <h4>What's Next?</h4>
+              <ul>
+                <li>✅ Your tutor has been notified</li>
+                <li>⏳ Wait for tutor confirmation</li>
+                <li>📧 You'll receive an update via email</li>
+                <li>📅 Check your sessions page for details</li>
+              </ul>
+            </div>
+            
+            <div className="action-buttons">
+              <button className="btn-secondary" onClick={handleReject}>
+                Try Different Match
+              </button>
+              <button className="btn-primary" onClick={handleAccept}>
+                Accept Match
+              </button>
             </div>
           </div>
         )}
 
         {step === 'failed' && (
-           <div className="state-failed">
-             <div className="auto-icon-large" style={{color: '#e74c3c'}}>
-               <FaTimesCircle />
-             </div>
-             <h2>No Match Found</h2>
-             <p>We couldn't find a tutor matching your specific criteria.</p>
-             <button className="start-btn" onClick={() => setStep('form')}>Try Again</button>
-           </div>
+          <div className="state-failed">
+            <div className="failed-icon-large">
+              <FaTimesCircle />
+            </div>
+            <h2>No Match Found</h2>
+            
+            <p className="failed-message">{errorMessage}</p>
+            
+            <div className="coordinator-notice">
+              <h4>📋 What Happens Now?</h4>
+              <ul>
+                <li>🔍 Your request has been queued for coordinator review</li>
+                <li>👥 A coordinator will manually find a suitable tutor</li>
+                <li>📧 You'll be notified once a match is found</li>
+                <li>⏱️ This usually takes 24-48 hours</li>
+              </ul>
+            </div>
+            
+            <p className="suggestion-text">
+              <strong>Tip:</strong> Try adjusting your availability or subject preferences for better matches.
+            </p>
+            
+            <div className="action-buttons">
+              <button className="btn-secondary" onClick={() => navigate('/tutormatching')}>
+                Back to Options
+              </button>
+              <button className="btn-primary" onClick={() => setStep('form')}>
+                Try Again
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
