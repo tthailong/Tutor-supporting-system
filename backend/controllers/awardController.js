@@ -56,66 +56,6 @@ const createAward = async (req, res) => {
     }
 };
 
-// Get all awards
-const getAllAwards = async (req, res) => {
-    try {
-        const awards = await awardModel.find({})
-            .populate('studentId', 'fullname email')
-            .populate('sessionId', 'subject')
-            .sort({ createdAt: -1 });
-
-        res.status(200).json({
-            success: true,
-            count: awards.length,
-            data: awards
-        });
-    } catch (error) {
-        console.error("Error fetching awards:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error fetching awards",
-            error: error.message
-        });
-    }
-};
-
-// Get award by ID
-const getAwardById = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid award ID format"
-            });
-        }
-
-        const award = await awardModel.findById(id)
-            .populate('studentId', 'fullname email')
-            .populate('sessionId', 'subject');
-
-        if (!award) {
-            return res.status(404).json({
-                success: false,
-                message: "Award not found"
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: award
-        });
-    } catch (error) {
-        console.error("Error fetching award:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error fetching award",
-            error: error.message
-        });
-    }
-};
-
 // Get awards by student ID
 const getAwardsByStudent = async (req, res) => {
     try {
@@ -273,8 +213,6 @@ const deleteAward = async (req, res) => {
 
 export {
     createAward,
-    getAllAwards,
-    getAwardById,
     getAwardsByStudent,
     getAwardsByTutor,
     editAward,
