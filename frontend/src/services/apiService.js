@@ -89,7 +89,7 @@ export const getTutorById = (tutorId) => {
 
 /**
  * Create manual match request
- * @param {Object} data - { tutorId, subject, description, preferredTimeSlots }
+ * @param {Object} data - { tutorId, subject, selectedTimeSlot, description }
  * @returns {Promise} Axios response with registration
  */
 export const createManualMatchRequest = (data) => {
@@ -111,6 +111,28 @@ export const autoMatch = (data) => {
  */
 export const getMyRequests = () => {
   return api.get('/api/matching/my-requests');
+};
+
+/**
+ * Get tutor's availability
+ * @param {string} tutorId - Tutor ID
+ * @returns {Promise} Axios response with tutor availability
+ */
+export const getTutorAvailability = (tutorId) => {
+  return api.get(`/api/tutors/${tutorId}`);
+};
+
+// ==========================================
+// NOTIFICATION ENDPOINTS
+// ==========================================
+
+/**
+ * Confirm manual match request (Tutor confirms)
+ * @param {string} notificationId - Notification ID
+ * @returns {Promise} Axios response with session data
+ */
+export const confirmMatchRequest = (notificationId) => {
+  return api.post(`/api/notifications/${notificationId}/confirm-match`);
 };
 
 // ==========================================

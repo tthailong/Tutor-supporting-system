@@ -180,10 +180,24 @@ export const getTutors = asyncHandler(async (req, res) => {
  * Create manual match request
  */
 export const createManualMatchRequest = asyncHandler(async (req, res) => {
-  const { tutorId, subject, description, preferredTimeSlots } = req.body;
+  const { tutorId, subject, selectedTimeSlot, description } = req.body;
   
   // For testing: use hardcoded student ID if auth is disabled
-  const studentId = req.user?.id || '69285ff4fcc2424d7f1b9234';
+  // Updated to match actual test student: student001@hcmut.edu.vn
+  const studentId = req.user?.id || '692abcfd5c0f80ce98b7c781';
+  
+  // Validate required fields
+  if (!tutorId || !subject || !selectedTimeSlot) {
+    const error = new Error("Missing required fields: tutorId, subject, or selectedTimeSlot");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!selectedTimeSlot.date || !selectedTimeSlot.startTime || !selectedTimeSlot.endTime) {
+    const error = new Error("selectedTimeSlot must include date, startTime, and endTime");
+    error.statusCode = 400;
+    throw error;
+  }
   
   // Use transaction to prevent race conditions
   const result = await withTransaction(async (session) => {
@@ -196,22 +210,37 @@ export const createManualMatchRequest = asyncHandler(async (req, res) => {
       throw error;
     }
     
-    // 2. Check if preferred time slots are available
-    const slotsAvailable = isSlotAvailable(tutor.bookedSlots, preferredTimeSlots);
+    // 2. Check if the selected time slot is available
+    const { date, startTime, endTime } = selectedTimeSlot;
+    const bookedSlotsForDate = tutor.bookedSlots?.get(date) || [];
     
-    if (!slotsAvailable) {
-      const error = new Error("One or more requested time slots are already booked");
+    // Check for time overlap
+    const isBooked = bookedSlotsForDate.some(slot => {
+      return (
+        (startTime >= slot.start && startTime < slot.end) ||
+        (endTime > slot.start && endTime <= slot.end) ||
+        (startTime <= slot.start && endTime >= slot.end)
+      );
+    });
+    
+    if (isBooked) {
+      const error = new Error(`Time slot ${startTime}-${endTime} on ${date} is already booked`);
       error.statusCode = 409;
       throw error;
     }
     
-    // 3. Create registration document
+    // 3. Create registration document with Pending status
     const registration = await registrationModel.create([{
       studentId,
       tutorId,
       subject,
-      description,
-      preferredTimeSlots,
+      description: description || `Manual match request for ${subject}`,
+      preferredTimeSlots: [{
+        // Map day to 3-letter format to match enum: Mon, Tue, Wed, Thu, Fri, Sat, Sun
+        dayOfWeek: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(date).getDay()],
+        startTime,
+        endTime
+      }],
       status: "Pending",
       type: "Manual"
     }], { session });
@@ -219,20 +248,48 @@ export const createManualMatchRequest = asyncHandler(async (req, res) => {
     return { registration: registration[0], tutor };
   });
   
-  // 4. Notify tutor (outside transaction)
+  // 4. Get student info
   const student = await User.findById(studentId);
-  await notifyTutorNewRequest(tutorId, student, result.registration);
   
-  logger.info("Manual match request created", {
+  if (!student) {
+    const error = new Error("Student not found");
+    error.statusCode = 404;
+    throw error;
+  }
+  
+  // 5. Get tutor's userId for notification
+  const tutor = result.tutor;
+  const tutorUserId = tutor.userId || tutorId; // Fallback to tutorId if userId not set
+  
+  // 6. Create notification for tutor
+  const Notification = (await import("../models/notificationModel.js")).default;
+  
+  await Notification.create({
+    user: tutorUserId,
+    title: "New Manual Match Request",
+    message: `${student.name} has requested a session for ${subject} on ${selectedTimeSlot.date} at ${selectedTimeSlot.startTime}-${selectedTimeSlot.endTime}`,
+    type: "MANUAL_MATCH_REQUEST",
+    subject,
+    selectedTimeSlot,
+    studentId,
+    registrationId: result.registration._id,
+    metadata: {
+      studentName: student.name,
+      studentEmail: student.email
+    }
+  });
+  
+  logger.info("Manual match request created with notification", {
     registrationId: result.registration._id,
     studentId,
     tutorId,
-    subject
+    subject,
+    selectedTimeSlot
   });
   
   res.status(201).json({
     success: true,
-    message: "Match request submitted successfully",
+    message: "Match request submitted successfully. Waiting for tutor confirmation.",
     registration: result.registration
   });
 });

@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './Manual.css';
-import { FaStar, FaUserCircle, FaSearch, FaFilter, FaTimes, FaCheckCircle } from 'react-icons/fa';
+import { FaStar, FaUserCircle, FaSearch, FaFilter, FaTimes, FaCheckCircle, FaCalendar, FaClock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { getTutors, createManualMatchRequest } from '../../../services/apiService';
+import { getTutors, createManualMatchRequest, getTutorAvailability } from '../../../services/apiService';
 
 const Manual = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("All Subjects");
   const [selectedDay, setSelectedDay] = useState("Any Day");
-  const [showTimeSlotModal, setShowTimeSlotModal] = useState(false);
 
   // API state
   const [tutors, setTutors] = useState([]);
@@ -22,12 +21,19 @@ const Manual = () => {
   const [selectedTutor, setSelectedTutor] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // New state for subject and timeslot selection
+  const [tutorAvailability, setTutorAvailability] = useState(null);
+  const [selectedSubjectForRequest, setSelectedSubjectForRequest] = useState("");
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+
   // Fetch tutors from API
   useEffect(() => {
     fetchTutors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSubject, selectedDay]);
 
-  const   fetchTutors = async () => {
+  const fetchTutors = async () => {
     setLoading(true);
     setError(null);
     
@@ -52,27 +58,45 @@ const Manual = () => {
     }
   };
 
-  const handleSelectClick = (tutor) => {
+  const handleSelectClick = async (tutor) => {
     setSelectedTutor(tutor);
-    //setShowTimeSlotModal(true);
-    setShowConfirmModal(true);
+    setSelectedSubjectForRequest(tutor.expertise?.[0] || "");
+    setSelectedTimeSlot(null);
+    setLoadingAvailability(true);
+    
+    try {
+      // Fetch tutor's full availability
+      const response = await getTutorAvailability(tutor._id);
+      // Backend returns { availability, bookedSlots } directly
+      setTutorAvailability(response.data.availability);
+      setShowConfirmModal(true);
+    } catch (err) {
+      alert('Failed to load tutor availability: ' + (err.response?.data?.message || err.message));
+      console.error('Error fetching availability:', err);
+    } finally {
+      setLoadingAvailability(false);
+    }
   };
 
   const handleConfirmSelection = async () => {
+    if (!selectedSubjectForRequest) {
+      alert('Please select a subject');
+      return;
+    }
+
+    if (!selectedTimeSlot) {
+      alert('Please select a time slot');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       await createManualMatchRequest({
         tutorId: selectedTutor._id,
-        subject: selectedTutor.expertise[0],
-        description: `Manual selection for ${selectedTutor.expertise[0]}`,
-        preferredTimeSlots: [
-          {
-            dayOfWeek: "Mon",
-            startTime: "09:00",
-            endTime: "11:00"
-          }
-        ]
+        subject: selectedSubjectForRequest,
+        selectedTimeSlot,
+        description: `Manual selection for ${selectedSubjectForRequest}`
       });
       
       setShowConfirmModal(false);
@@ -89,6 +113,24 @@ const Manual = () => {
   const handleSuccessClose = () => {
     setShowSuccessModal(false);
     navigate('/tutorsessions');
+  };
+
+  // Format availability for display
+  const getAvailabilitySlots = () => {
+    if (!tutorAvailability) return [];
+    
+    const slots = [];
+    for (const [date, timeSlots] of Object.entries(tutorAvailability)) {
+      timeSlots.forEach(slot => {
+        slots.push({
+          date,
+          startTime: slot.start,
+          endTime: slot.end,
+          display: `${date} | ${slot.start} - ${slot.end}`
+        });
+      });
+    }
+    return slots.sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
   // Filter tutors by search term (client-side)
@@ -208,7 +250,7 @@ const Manual = () => {
       
       <button className="back-btn" onClick={() => navigate('/tutormatching')}>Back to Options</button>
 
-      {/* Confirmation Modal */}
+      {/* Confirmation Modal with Subject and Timeslot Selection */}
       {showConfirmModal && selectedTutor && (
         <div className="modal-overlay" onClick={() => !isSubmitting && setShowConfirmModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -217,7 +259,7 @@ const Manual = () => {
             </button>
             
             <div className="modal-header">
-              <h2>Confirm Tutor Selection</h2>
+              <h2>Book Session with {selectedTutor.name}</h2>
             </div>
             
             <div className="modal-body">
@@ -237,21 +279,56 @@ const Manual = () => {
                 </div>
                 <h3>{selectedTutor.name}</h3>
                 <p className="subject">{selectedTutor.expertise?.join(', ')}</p>
-                <div className="tutor-stats">
-                  <div className="stat">
-                    <FaStar style={{ color: '#ffd700' }} />
-                    <span>{selectedTutor.rating?.toFixed(1)} Rating</span>
-                  </div>
-                  <div className="stat">
-                    <span>📚 {selectedTutor.totalSessions} Sessions</span>
-                  </div>
-                </div>
-                <p className="bio">{selectedTutor.bio}</p>
               </div>
-              
-              <p className="confirmation-text">
-                Do you want to select <strong>{selectedTutor.name}</strong> as your tutor?
-              </p>
+
+              {/* Subject Selection */}
+              <div className="selection-group">
+                <label><FaFilter /> Select Subject:</label>
+                <select 
+                  value={selectedSubjectForRequest}
+                  onChange={(e) => setSelectedSubjectForRequest(e.target.value)}
+                  className="subject-select"
+                >
+                  {selectedTutor.expertise?.map(subject => (
+                    <option key={subject} value={subject}>{subject}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Timeslot Selection */}
+              <div className="selection-group">
+                <label><FaClock /> Select Time Slot:</label>
+                {loadingAvailability ? (
+                  <p>Loading availability...</p>
+                ) : (
+                  <div className="timeslot-list">
+                    {getAvailabilitySlots().length > 0 ? (
+                      getAvailabilitySlots().map((slot, index) => (
+                        <div 
+                          key={index}
+                          className={`timeslot-item ${selectedTimeSlot?.date === slot.date && selectedTimeSlot?.startTime === slot.startTime ? 'selected' : ''}`}
+                          onClick={() => setSelectedTimeSlot({
+                            date: slot.date,
+                            startTime: slot.startTime,
+                            endTime: slot.endTime
+                          })}
+                        >
+                          <FaCalendar style={{ marginRight: '8px' }} />
+                          {slot.display}
+                        </div>
+                      ))
+                    ) : (
+                      <p style={{ color: '#999' }}>No available time slots</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {selectedTimeSlot && (
+                <div className="selected-info">
+                  <p><strong>Selected:</strong> {selectedSubjectForRequest} on {selectedTimeSlot.date} at {selectedTimeSlot.startTime}-{selectedTimeSlot.endTime}</p>
+                </div>
+              )}
             </div>
             
             <div className="modal-footer">
@@ -265,9 +342,9 @@ const Manual = () => {
               <button 
                 className="btn-confirm" 
                 onClick={handleConfirmSelection}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !selectedTimeSlot}
               >
-                {isSubmitting ? 'Processing...' : 'Confirm Selection'}
+                {isSubmitting ? 'Processing...' : 'Confirm Booking'}
               </button>
             </div>
           </div>
@@ -279,7 +356,7 @@ const Manual = () => {
         <div className="modal-overlay">
           <div className="modal-content success-modal">
             <div className="modal-header-with-icon">
-              <h2>Match Request Sent!</h2>
+              <h2>Request Sent!</h2>
               <div className="modal-icon-right success">
                 <FaCheckCircle />
               </div>
@@ -287,14 +364,14 @@ const Manual = () => {
             
             <div className="modal-body">
               <p className="success-message">
-                Your request to match with <strong>{selectedTutor.name}</strong> has been submitted successfully!
+                Your booking request to <strong>{selectedTutor.name}</strong> has been submitted successfully!
               </p>
               <div className="next-steps">
                 <h4>What's Next?</h4>
                 <ul>
                   <li>✅ Your tutor will be notified</li>
                   <li>⏳ Wait for tutor confirmation</li>
-                  <li>📧 You'll receive an update via email</li>
+                  <li>📧 You'll receive a notification when confirmed</li>
                   <li>📅 Check your sessions page for status</li>
                 </ul>
               </div>
@@ -308,8 +385,6 @@ const Manual = () => {
           </div>
         </div>
       )}
-
-
     </div>
   );
 };
