@@ -150,36 +150,6 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-<<<<<<< HEAD
-    .modal-content {
-        width: 95%;
-        max-height: 95vh;
-    }
-
-    .modal-header {
-        padding: 15px;
-    }
-
-    .modal-header h2 {
-        font-size: 18px;
-    }
-
-    .award-form {
-        padding: 15px;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-actions {
-        flex-direction: column;
-    }
-
-    .btn-cancel,
-    .btn-submit {
-        width: 100%;
-=======
     .app-layout {
         flex-direction: column;
     }
@@ -201,6 +171,5 @@
     .awards-table th,
     .awards-table td {
         padding: 8px;
->>>>>>> origin/main
     }
 }
