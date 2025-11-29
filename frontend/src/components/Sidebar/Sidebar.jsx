@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './Sidebar.css';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -7,6 +7,11 @@ const role = user?.role;
 
 const Sidebar = () => {
     const location = useLocation();
+
+    // Don't render sidebar if no user is logged in
+    if (!user || !role) {
+        return null;
+    }
 
     return (
         <div className='sidebar'>
@@ -24,6 +29,12 @@ const Sidebar = () => {
                             className={`sidebar-option ${location.pathname === "/tutorsessions" ? "active" : ""}`}
                         >
                             <div className='sidebar-button'>View sessions</div>
+                        </Link>
+                        <Link
+                            to='/notifications'
+                            className={`sidebar-option ${location.pathname === "/notifications" ? "active" : ""}`}
+                        >
+                            <div className='sidebar-button'>Notifications</div>
                         </Link>
                         <Link
                             to='/awards'

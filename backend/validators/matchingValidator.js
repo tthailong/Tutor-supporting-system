@@ -61,13 +61,40 @@ export const validateManualMatchRequest = (req, res, next) => {
       .max(1000)
       .allow("")
       .optional(),
-    preferredTimeSlots: Joi.array()
-      .items(timeSlotSchema)
-      .min(1)
+    selectedTimeSlot: Joi.object({
+      date: Joi.string()
+        .pattern(/^\d{4}-\d{2}-\d{2}$/)
+        .required()
+        .messages({
+          "string.pattern.base": "date must be in YYYY-MM-DD format",
+          "any.required": "date is required"
+        }),
+      startTime: Joi.string()
+        .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+        .required()
+        .messages({
+          "string.pattern.base": "startTime must be in HH:mm format (e.g., 09:00)",
+          "any.required": "startTime is required"
+        }),
+      endTime: Joi.string()
+        .pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+        .required()
+        .custom((value, helpers) => {
+          const startTime = helpers.state.ancestors[0].startTime;
+          if (startTime && value <= startTime) {
+            return helpers.error("any.invalid");
+          }
+          return value;
+        })
+        .messages({
+          "string.pattern.base": "endTime must be in HH:mm format (e.g., 11:00)",
+          "any.required": "endTime is required",
+          "any.invalid": "endTime must be greater than startTime"
+        })
+    })
       .required()
       .messages({
-        "array.min": "At least one preferred time slot is required",
-        "any.required": "preferredTimeSlots is required"
+        "any.required": "selectedTimeSlot is required"
       })
   });
 
