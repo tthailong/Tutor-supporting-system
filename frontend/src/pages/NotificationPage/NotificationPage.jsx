@@ -7,7 +7,7 @@ const NotificationPage = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   console.log("Loaded user from localStorage:", user);
   
-  const userId = user?.studentProfile;
+  const userId = user?.id;
   console.log("Derived userId:", userId);
   //const userId = "677e4a15c121f612cc2d9a3b"; // TODO: lấy từ auth
   const [notifications, setNotifications] = useState([]);

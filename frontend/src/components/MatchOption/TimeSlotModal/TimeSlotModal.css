@@ -1,0 +1,55 @@
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-box {
+    background: white;
+    padding: 20px;
+    width: 400px;
+    border-radius: 12px;
+  }
+  
+  .slots-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 6px;
+  }
+  
+  .slot-item {
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    cursor: pointer;
+  }
+  
+  .slot-item.active {
+    background: #4f8bff;
+    color: white;
+    border-color: #3466ff;
+  }
+  
+  .modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .cancel-btn {
+    background: #ccc;
+    padding: 8px 12px;
+  }
+  
+  .submit-btn {
+    background: #4f8bff;
+    color: white;
+    padding: 8px 12px;
+  }
+  

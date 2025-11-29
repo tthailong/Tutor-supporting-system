@@ -28,7 +28,8 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
   // Safe defaults
   const studentFeedback = session.studentFeedback || { submitted: false, rating: 0 };
   const tutorProgress = session.tutorProgress || { lastUpdated: null };
-  const { title, time, location, capacity, signedUp } = session;
+  const signedUpCount = session.students ? session.students.length : 0;
+  const { title, time, location, capacity } = session;
 
   return (
     <div className="session-card">
@@ -39,7 +40,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
              <div className="time-and-location">
                <span>{time}</span> <span>{location}</span>
              </div>
-             <div className="capacity">{signedUp}/{capacity}</div>
+             <div className="capacity">{signedUpCount}/{capacity}</div>
            </div>
            
                      {/* NEW: Feedback Section */}
