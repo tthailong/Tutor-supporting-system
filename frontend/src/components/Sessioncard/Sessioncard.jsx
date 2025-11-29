@@ -6,7 +6,7 @@ import ProgressTracker from './ProgressTracker';
 
 const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDelete }) => {
   // Sync state with props when parent re-renders (e.g. after list refresh)
-  const [session, setSession] = React.useState(sessionData);
+  const [session, setSession] = React.useState(sessionData || {});
   const [showFeedbackForm, setShowFeedbackForm] = React.useState(false);
   const [showProgressTracker, setShowProgressTracker] = React.useState(false);
 
