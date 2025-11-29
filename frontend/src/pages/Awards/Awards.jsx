@@ -12,8 +12,7 @@ const Awards = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingAward, setEditingAward] = useState(null);
-    
-    const API_URL = 'http://localhost:4000/api';
+
     const user = JSON.parse(localStorage.getItem("user"));
     const TUTOR_ID = user?.tutorProfile;
 
@@ -33,9 +32,9 @@ const Awards = () => {
         try {
             setLoading(true);
             const [studentsRes, sessionsRes, awardsRes] = await Promise.all([
-                axios.get(`${API_URL}/users/role/Student`),
-                axios.get(`${API_URL}/session/tutor/${TUTOR_ID}`),
-                axios.get(`${API_URL}/awards/tutor/${TUTOR_ID}`)
+                axios.get(`/api/users/role/Student`),
+                axios.get(`/api/session/tutor/${TUTOR_ID}`),
+                axios.get(`/api/awards/tutor/${TUTOR_ID}`)
             ]);
             
             setStudents(studentsRes.data?.data || []);
@@ -52,13 +51,13 @@ const Awards = () => {
     const handleModalSubmit = async (formData) => {
         try {
             if (editingAward) {
-                await axios.put(`${API_URL}/awards/${editingAward._id}`, {
+                await axios.put(`/api/awards/${editingAward._id}`, {
                     credits: formData.credits,
                     scholarship: formData.scholarship
                 });
                 toast.success('Award updated successfully');
             } else {
-                await axios.post(`${API_URL}/awards`, {
+                await axios.post(`/api/awards`, {
                     ...formData,
                     tutorId: TUTOR_ID
                 });
@@ -85,7 +84,7 @@ const Awards = () => {
         }
 
         try {
-            await axios.delete(`${API_URL}/awards/${awardId}`);
+            await axios.delete(`/api/awards/${awardId}`);
             toast.success('Award deleted successfully');
             fetchAllData();
         } catch (error) {
@@ -191,20 +190,27 @@ const Awards = () => {
                                                 {new Date(award.createdAt).toLocaleDateString('vi-VN')}
                                             </td>
                                             <td className="actions">
-                                                <button
-                                                    className="btn-edit"
-                                                    onClick={() => handleEdit(award)}
-                                                    title="Edit award"
+                                                <a
+                                                    href="#"
+                                                    className="action-link edit-link"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleEdit(award);
+                                                    }}
                                                 >
-                                                    ✏️
-                                                </button>
-                                                <button
-                                                    className="btn-delete"
-                                                    onClick={() => handleDelete(award._id)}
-                                                    title="Delete award"
+                                                    Edit
+                                                </a>
+                                                <span className="action-separator">|</span>
+                                                <a
+                                                    href="#"
+                                                    className="action-link delete-link"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleDelete(award._id);
+                                                    }}
                                                 >
-                                                    🗑️
-                                                </button>
+                                                    Delete
+                                                </a>
                                             </td>
                                         </tr>
                                     ))}

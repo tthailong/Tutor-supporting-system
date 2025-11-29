@@ -177,7 +177,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
         startDate: firstDateString, 
         timeSlots: timeSlots 
     };
-
+    console.log('Editing session:', uiSession);
     setCurrentSession(uiSession);
     setIsFormOpen(true);
   };
@@ -186,7 +186,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
   const filteredSessions = sessions.filter(s => {
     return (s.subject || "").toLowerCase().includes(searchTerm.toLowerCase());
   });
-
+  
   const subjects = [...new Set(sessions.map(s => s.subject))];
 
   return (
@@ -212,7 +212,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
             )}
           </div>
         </div>
-        {/*<Sessioncard role="tutor" />ko biet tac dung gi */}
+        <Sessioncard role="tutor" />
 
         {filteredSessions.length === 0 ? (
           <p className="no-sessions">No sessions found.</p>
