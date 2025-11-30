@@ -112,7 +112,7 @@ const Manual = () => {
 
   const handleSuccessClose = () => {
     setShowSuccessModal(false);
-    navigate('/tutorsessions');
+    navigate('/studentviewcourse');
   };
 
   // Format availability for display
