@@ -35,6 +35,7 @@ const Login = () => {
         localStorage.setItem('user', JSON.stringify(data.user));
         alert('Dang nhap thanh cong!');
         navigate('/');
+        window.location.reload();
       } else {
         setError(data.message);
       }

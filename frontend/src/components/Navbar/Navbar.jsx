@@ -24,8 +24,11 @@ const Navbar = () => {
       <img src={assets.logo} alt="" className='logo' />
       <ul className='navbar-menu'>
         <li> <Link to='/' onClick={() => setMenu("home")} className={menu === "home" ? "active" : "nonactive"}>home</Link></li>
-        {(role == "Student" || role == "Tutor") && (
-          <li> <Link to='/tutoractivities' onClick={() => setMenu("activities")} className={menu === "activities" ? "active" : "nonactive"}>activities</Link></li>
+        {(role == "Tutor") && (
+          <li> <Link to='/tutorsessions' onClick={() => setMenu("activities")} className={menu === "activities" ? "active" : "nonactive"}>activities</Link></li>
+        )}
+        {(role == "Student") && (
+          <li> <Link to='/studentviewcourse' onClick={() => setMenu("activities")} className={menu === "activities" ? "active" : "nonactive"}>activities</Link></li>
         )}
       </ul>
       <div className="navbar-right">
