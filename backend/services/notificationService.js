@@ -145,3 +145,61 @@ export const notifyStudentCoordinatorReview = async (studentId, registrationInfo
     };
   }
 };
+
+/**
+ * Notify student of automatic session enrollment
+ * @param {String} studentId - Student's user ID
+ * @param {Object} session - Session information
+ * @param {Object} registrationInfo - Registration details
+ */
+export const notifyStudentSessionEnrollment = async (studentId, session, registrationInfo) => {
+  try {
+    const Notification = (await import("../models/notificationModel.js")).default;
+    
+    const sessionDates = session.getSessionDates ? session.getSessionDates() : [];
+    const firstDate = sessionDates[0] || { 
+      date: session.startDate, 
+      start: Object.values(session.schedule)[0]?.[0]?.start || "N/A",
+      end: Object.values(session.schedule)[0]?.[0]?.end || "N/A"
+    };
+    
+    await Notification.create({
+      user: studentId,
+      studentId: studentId,
+      title: "Enrolled in Session!",
+      message: `You've been automatically enrolled in ${session.subject} with ${session.tutor.name}`,
+      type: "SESSION_ENROLLMENT",
+      relatedSession: session._id,
+      metadata: {
+        tutorName: session.tutor.name,
+        subject: session.subject,
+        date: firstDate.date instanceof Date ? firstDate.date.toISOString().split("T")[0] : firstDate.date,
+        startTime: firstDate.start,
+        endTime: firstDate.end,
+        location: session.location
+      }
+    });
+    
+    logger.info("Student notified of session enrollment", {
+      studentId,
+      sessionId: session._id,
+      subject: session.subject
+    });
+    
+    console.log(`📧 [NOTIFICATION] Student ${studentId} enrolled in session ${session._id}`);
+    
+    return {
+      success: true,
+      message: "Student notified of session enrollment"
+    };
+  } catch (error) {
+    logger.error("Failed to notify student of session enrollment", {
+      error: error.message,
+      studentId
+    });
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+};

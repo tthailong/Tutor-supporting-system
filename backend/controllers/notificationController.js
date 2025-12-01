@@ -145,6 +145,7 @@ export const confirmManualMatchRequest = async (req, res) => {
         // 7. Send confirmation notification to student
         await Notification.create({
             user: registration.studentId,
+            studentId: registration.studentId, // Add studentId for display in notification details
             title: "Match Confirmed!",
             message: `Your tutor ${tutor.name} has confirmed your session for ${notification.subject} on ${date} at ${startTime}-${endTime}`,
             type: "MATCH_SUCCESS",

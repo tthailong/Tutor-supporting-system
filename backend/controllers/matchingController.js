@@ -1,5 +1,7 @@
 import asyncHandler from "express-async-handler";
 import tutorModel from "../models/tutorModel.js";
+import sessionModel from "../models/sessionModel.js";
+import Student from "../models/studentModel.js";
 import registrationModel from "../models/registrationModel.js";
 import tutorMatchLogModel from "../models/tutorMatchLogModel.js";
 import User from "../models/User.js";
@@ -9,7 +11,8 @@ import {
   notifyStudentMatchSuccess,
   notifyTutorNewRequest,
   notifyCoordinatorReview,
-  notifyStudentCoordinatorReview
+  notifyStudentCoordinatorReview,
+  notifyStudentSessionEnrollment
 } from "../services/notificationService.js";
 
 // --------------------
@@ -75,6 +78,77 @@ const isSlotAvailable = (bookedSlots, requestedSlots) => {
   }
   
   return true; // Slot is available
+};
+
+/**
+ * Check if student's time slots overlap with session schedule
+ * @param {Object} sessionSchedule - Session's schedule (Map converted to object)
+ * @param {Array} studentTimeSlots - Student's available time slots [{dayOfWeek, startTime, endTime}]
+ * @returns {Number} Overlap score (0 = no overlap, higher = better overlap)
+ */
+const checkSessionTimeOverlap = (sessionSchedule, studentTimeSlots) => {
+  let overlapScore = 0;
+  
+  for (const [date, timeSlots] of Object.entries(sessionSchedule)) {
+    const sessionDate = new Date(date);
+    const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][sessionDate.getDay()];
+    
+    // Check if student is available on this day
+    const studentSlotsForDay = studentTimeSlots.filter(slot => slot.dayOfWeek === dayOfWeek);
+    
+    for (const studentSlot of studentSlotsForDay) {
+      for (const sessionSlot of timeSlots) {
+        // Check time overlap - perfect fit gets highest score
+        if (sessionSlot.start <= studentSlot.startTime && sessionSlot.end >= studentSlot.endTime) {
+          overlapScore += 10; // Perfect fit
+        } else if (
+          (studentSlot.startTime >= sessionSlot.start && studentSlot.startTime < sessionSlot.end) ||
+          (studentSlot.endTime > sessionSlot.start && studentSlot.endTime <= sessionSlot.end)
+        ) {
+          overlapScore += 5; // Partial overlap
+        }
+      }
+    }
+  }
+  
+  return overlapScore;
+};
+
+/**
+ * Find existing sessions that match subject and have available capacity
+ * @param {String} subject - Subject to match
+ * @param {Array} availableTimeSlots - Student's available time slots
+ * @returns {Promise<Array>} Array of matching sessions with scores
+ */
+const findMatchingSessions = async (subject, availableTimeSlots) => {
+  // Query sessions by subject, not full capacity, status = 'Scheduled'
+  const sessions = await sessionModel.find({
+    subject: subject,
+    status: 'Scheduled',
+    $expr: { $lt: [{ $size: "$students" }, "$capacity"] }
+  })
+  .populate('tutor', 'name rating')
+  .lean();
+  
+  // Filter and score by time overlap
+  const scoredSessions = sessions
+    .map(session => {
+      const overlapScore = checkSessionTimeOverlap(session.schedule, availableTimeSlots);
+      if (overlapScore === 0) return null; // No overlap
+      
+      let score = overlapScore; // Base score from time overlap
+      
+      // Bonus points
+      if (session.tutor.rating > 4.5) score += 5;
+      const availableSpots = session.capacity - session.students.length;
+      if (availableSpots > 3) score += 2; // Prefer sessions with more space
+      
+      return { session, score };
+    })
+    .filter(item => item !== null)
+    .sort((a, b) => b.score - a.score);
+  
+  return scoredSessions;
 };
 
 // --------------------
@@ -307,8 +381,112 @@ export const autoMatch = asyncHandler(async (req, res) => {
   
   try {
     // --------------------
-    // STEP 1: Filter tutors by subject
+    // STEP 1: Try to find existing sessions with available capacity
     // --------------------
+    logger.info("Auto-match: Searching for existing sessions", {
+      subject,
+      studentId
+    });
+    
+    const matchingSessions = await findMatchingSessions(subject, availableTimeSlots);
+    
+    if (matchingSessions.length > 0) {
+      const bestSessionMatch = matchingSessions[0];
+      const session = bestSessionMatch.session;
+      
+      logger.info("Auto-match: Found matching session", {
+        sessionId: session._id,
+        subject: session.subject,
+        matchScore: bestSessionMatch.score,
+        availableSpots: session.capacity - session.students.length
+      });
+      
+      // Enroll student in the session
+      try {
+        // Find student profile
+        const studentProfile = await Student.findOne({ userId: studentId });
+        if (!studentProfile) {
+          throw new Error("Student profile not found");
+        }
+        
+        // Add student to session
+        const updatedSession = await sessionModel.findByIdAndUpdate(
+          session._id,
+          { $push: { students: studentProfile._id } },
+          { new: true }
+        ).populate('tutor', 'name rating');
+        
+        // Create registration record for tracking
+        const registration = await registrationModel.create({
+          studentId,
+          tutorId: session.tutor._id,
+          subject,
+          description,
+          preferredTimeSlots: availableTimeSlots,
+          status: "Matched",
+          type: "Auto_Session_Enrollment",
+          matchScore: bestSessionMatch.score,
+          matchedSessionId: session._id,
+          processingTime: Date.now() - startTime
+        });
+        
+        // Log successful session enrollment
+        await tutorMatchLogModel.create({
+          registrationId: registration._id,
+          attemptedAt: new Date(),
+          success: true,
+          matchScore: bestSessionMatch.score,
+          processingTime: Date.now() - startTime,
+          candidateTutors: [],
+          selectedTutorId: session.tutor._id,
+          enrolledInSessionId: session._id
+        });
+        
+        // Notify student of session enrollment
+        await notifyStudentSessionEnrollment(studentId, updatedSession, registration);
+        
+        logger.info("Auto-match: Student enrolled in existing session", {
+          registrationId: registration._id,
+          studentId,
+          sessionId: session._id,
+          tutorId: session.tutor._id,
+          matchScore: bestSessionMatch.score,
+          processingTime: Date.now() - startTime
+        });
+        
+        return res.status(201).json({
+          success: true,
+          message: "Successfully enrolled in existing session!",
+          registration,
+          enrolledSession: {
+            _id: updatedSession._id,
+            subject: updatedSession.subject,
+            tutor: updatedSession.tutor,
+            location: updatedSession.location,
+            capacity: updatedSession.capacity,
+            enrolledStudents: updatedSession.students.length
+          },
+          matchScore: bestSessionMatch.score,
+          type: "session_enrollment"
+        });
+      } catch (enrollmentError) {
+        logger.error("Failed to enroll student in session, falling back to tutor matching", {
+          error: enrollmentError.message,
+          sessionId: session._id,
+          studentId
+        });
+        // Continue to tutor matching fallback below
+      }
+    }
+    
+    // --------------------
+    // STEP 2: Fallback to tutor matching (original logic)
+    // --------------------
+    logger.info("Auto-match: No suitable sessions found, proceeding with tutor matching", {
+      subject,
+      studentId
+    });
+    
     const candidateTutors = await tutorModel.find({
       expertise: subject
     }).lean();

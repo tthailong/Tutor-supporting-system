@@ -173,6 +173,7 @@ export const createSession = async (req, res) => {
       await Notification.create({
         // Send to the student's User ID
         user: studentIdToEnroll,
+        studentId: studentIdToEnroll, // Add studentId for display in notification details
         title: "Match Confirmed!",
         message: `Your tutor ${tutor.name} has confirmed your session for ${subject}.`,
         type: "MATCH_SUCCESS",
@@ -375,6 +376,7 @@ export const deleteSession = async (req, res) => {
 
     if (!session) return res.status(404).json({ message: "Session not found" });
 
+    // Rule: Only allow delete if no students enrolled
     if (session.students.length > 0) {
       return res.status(403).json({ message: "Cannot delete session with enrolled students." });
     }
