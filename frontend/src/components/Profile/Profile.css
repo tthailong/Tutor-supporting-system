@@ -56,7 +56,7 @@
 .info-item { display:flex; align-items:center; gap:10px; }
 .info-key { display:inline-block; min-width:60px; font-weight:700; color:#222; }
 
-.profile-form { padding: 8px 6px 22px; }
+.profile-form { padding: 80px 6px 22px; }
 
 .category-bar {
 	background: #67b5ff;
@@ -79,8 +79,42 @@
 .panel-title { background:#4ea9ff; color:#021022; padding:10px; font-weight:800; text-align:center; border-radius:3px; box-shadow: inset 0 -2px rgba(0,0,0,0.03); }
 .options { padding:16px; background:#fff; border:1px solid #e6eef8; min-height:190px; }
 .option { display:flex; align-items:center; gap:12px; padding:8px 0; }
-.option input { width:18px; height:18px; accent-color:#0676d6; }
 .option span { font-size:15px; }
+
+/* Only make checkbox/radio inputs small */
+.option input[type="checkbox"],
+.option input[type="radio"] {
+	width:18px;
+	height:18px;
+	accent-color:#0676d6;
+}
+
+/* Full width inputs/textarea used for editable/read-only fields */
+.full-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 8px 10px;
+	border: 1px solid #e1eef9;
+	border-radius: 6px;
+	font-size: 14px;
+	color: #052033;
+}
+.options .full-input { margin-top:6px; }
+.options textarea.full-input { min-height:84px; resize:vertical; }
+
+/* When an option is marked full-option, stack label above the input */
+.option.full-option {
+	flex-direction: column;
+	align-items: flex-start;
+}
+.option.full-option span { display:block; margin-bottom:6px; font-weight:700; }
+
+/* Also support .field alias used in JSX */
+.option.field {
+	flex-direction: column;
+	align-items: flex-start;
+}
+.option.field span { display:block; margin-bottom:6px; font-weight:700; }
 
 .buttons-row { display:flex; gap:16px; justify-content:center; margin-top:18px; }
 .btn { padding:8px 24px; border-radius:20px; border:0; cursor:pointer; font-weight:800; font-size:14px; }
