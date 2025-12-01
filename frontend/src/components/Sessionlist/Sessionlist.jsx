@@ -44,7 +44,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
   // 1. Fetch Sessions
   const fetchSessions = async () => {
     try {
-      const res = await fetch(`${API_URL}/tutor/${TUTOR_ID}`, {
+      const res = await fetch(`${API_URL}/tutors/${TUTOR_ID}`, {
         headers: {
           'Authorization': `Bearer ${token}` // ✅ FIX: Send the token
         }
@@ -62,6 +62,30 @@ const Sessionlist = ({ role = 'tutor' }) => {
 
   useEffect(() => {
     fetchSessions();
+  }, []);
+
+  const [tutor, setTutor] = useState(null);
+
+  const fetchTutor = async () => {
+    if (!TUTOR_ID) return;
+
+    try {
+      const res = await fetch(`http://localhost:4000/api/tutors/${TUTOR_ID}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTutor({ expertise: data.expertise, availability: data.availability, bookedSlots: data.bookedSlots });
+      }
+    } catch (err) {
+      console.error("Failed to fetch tutor:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTutor();
   }, []);
 
   // 2. Delete Handler
@@ -249,6 +273,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
           isOpen={isFormOpen}
           onClose={() => { setIsFormOpen(false); setCurrentSession(null); }}
           onSave={handleSave}
+          tutor={tutor}
           sessionData={currentSession}
         />
       )}

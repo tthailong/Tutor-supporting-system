@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './Sessionform.css';
 
-const SUBJECTS = [
-  "General Chemistry (CH1003)", "Calculus 1 (MT1003)",
-  "General Physics 1 (PH1003)", "Database Systems (CO2013)", "Linear Algebra (MT1007)", "Computer Network (CO3093)"
-];
+//const SUBJECTS = [
+//  "General Chemistry (CH1003)", "Calculus 1 (MT1003)",
+//  "General Physics 1 (PH1003)", "Database Systems (CO2013)", "Linear Algebra (MT1007)", "Computer Network (CO3093)"
+//];
 
 const getTodayDateString = () => {
   const today = new Date();
@@ -20,7 +20,9 @@ for (let i = 7; i <= 17; i++) {
   TIME_SLOTS.push(`${i < 10 ? '0' + i : i}:00 - ${i + 1 < 10 ? '0' + (i + 1) : i + 1}:00`);
 }
 
-const SessionForm = ({ isOpen, onClose, onSave, sessionData }) => {
+const SessionForm = ({ isOpen, onClose, onSave, sessionData, tutor }) => {
+  console.log("SessionForm tutor =", tutor);
+  const SUBJECTS = tutor?.expertise || [];
   const initialState = {
     name: "", location: "",
     startDate: getTodayDateString(), // 👈 NEW: Default to today (YYYY-MM-DD)
