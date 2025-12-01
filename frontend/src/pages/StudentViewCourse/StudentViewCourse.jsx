@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentViewCourse.css";
 import Sidebar from "../../components/Sidebar/Sidebar";
+import RatingDisplay from '../../components/Sessioncard/RatingDisplay';
+import FeedbackForm from '../../components/Sessioncard/FeedbackForm';
+import { Link } from 'react-router-dom';
 
 const CourseCard = ({ course, studentId, onCancelSuccess }) => {
   const navigate = useNavigate();
@@ -9,6 +12,13 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
   const dates = Object.keys(course.schedule);
   const firstDate = dates[0];
   const firstSlot = course.schedule[firstDate][0];
+  const [showFeedbackForm, setShowFeedbackForm] = React.useState(false);
+
+  const studentFeedback = course.studentFeedback || { submitted: false, rating: 0 };
+  const [session, setSession] = useState(course);
+  const handleFeedbackSubmit = (feedbackData) => {
+    setShowFeedbackForm(false);
+  };
 
   const handleReschedule = () => {
     navigate(`/selecttimeslot/${course._id}`);
@@ -48,6 +58,12 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
       <p className="room">Room: {course.location}</p>
 
       <div className="course-card-buttons">
+        <button
+          className="give-feedback-btn"
+          onClick={() => setShowFeedbackForm(true)}
+        >
+          📝 Give Feedback
+        </button>
         <button className="reschedule-btn" onClick={handleReschedule}>
           Reschedule
         </button>
@@ -55,6 +71,13 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
           Cancel
         </button>
       </div>
+      {showFeedbackForm && (
+        <FeedbackForm
+          session={course}
+          onSubmit={handleFeedbackSubmit}
+          onCancel={() => setShowFeedbackForm(false)}
+        />
+      )}
     </div>
   );
 };
@@ -103,5 +126,8 @@ const StudentViewCourse = () => {
     </div>
   );
 };
+
+
+
 
 export default StudentViewCourse;
