@@ -4,7 +4,7 @@ import tutorModel from "../models/tutorModel.js";
  * Insert/replace weekly availability for a tutor
  */
 const createToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET)
+  return jwt.sign({ id }, process.env.JWT_SECRET)
 }
 // ... existing createToken ...
 
@@ -19,7 +19,8 @@ export const getTutorData = async (req, res) => {
     res.status(200).json({
       success: true,
       availability: tutor.availability || {},
-      bookedSlots: tutor.bookedSlots || []
+      bookedSlots: tutor.bookedSlots || [],
+      expertise: tutor.expertise || []
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -43,16 +44,16 @@ export const setAvailability = async (req, res) => {
     tutor.availability = availability;
 
     await tutor.save();
-    
+
     return res.status(200).json({
       message: "Availability updated successfully",
       tutor
     });
 
   } catch (err) {
-    return res.status(500).json({ 
-      message: "Server error", 
-      error: err.message 
+    return res.status(500).json({
+      message: "Server error",
+      error: err.message
     });
   }
 };

@@ -1,11 +1,12 @@
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 // Get all users
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.find({})
             .select('-passwordHash'); // Exclude password from response
-        
+
         res.status(200).json({
             success: true,
             count: users.length,
