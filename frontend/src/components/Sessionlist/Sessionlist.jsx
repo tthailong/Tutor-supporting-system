@@ -72,7 +72,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
       const res = await fetch(`${API_URL}/${session._id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}` // ✅ FIX: Send the token
+          'Authorization': `Bearer ${token}`
         }
       });
 

@@ -13,7 +13,7 @@ const notificationSchema = new mongoose.Schema({
     // Notification type for different workflows
     type: {
         type: String,
-        enum: ["MANUAL_MATCH_REQUEST", "MATCH_SUCCESS", "SESSION_REMINDER", "GENERAL"],
+        enum: ["MANUAL_MATCH_REQUEST", "MATCH_SUCCESS", "SESSION_ENROLLMENT", "SESSION_REMINDER", "GENERAL"],
         default: "GENERAL"
     },
 
