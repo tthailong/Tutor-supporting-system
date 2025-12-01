@@ -1,20 +1,25 @@
 import express from "express";
-import { createSession, updateSession, deleteSession, getSessionsByTutor } from "../controllers/sessionController.js";
+import { createSession, updateSession, deleteSession, getSessionsByTutor, getSessionById, addMaterial, deleteMaterial } from "../controllers/sessionController.js";
 import multer from "multer";
+import { authMiddleware } from '../middleware/auth.js'; // Adjust path as needed
 
 const sessionRouter = express.Router();
 const upload = multer();
 
 // Create
-sessionRouter.post("/create", upload.none(), createSession);
+sessionRouter.post("/create", authMiddleware, upload.none(), createSession);
 
 // Read (Get by Tutor)
-sessionRouter.get("/tutor/:tutorId", getSessionsByTutor);
+sessionRouter.get("/tutor/:tutorId", authMiddleware, getSessionsByTutor);
 
 // Update
-sessionRouter.put("/:sessionId", upload.none(), updateSession);
+sessionRouter.put("/:sessionId", authMiddleware, upload.none(), updateSession);
 
 // Delete
-sessionRouter.delete("/:sessionId", deleteSession);
+sessionRouter.delete("/:sessionId", authMiddleware, deleteSession);
+
+sessionRouter.get('/:id', authMiddleware, getSessionById);
+sessionRouter.post('/:id/materials', authMiddleware, addMaterial);
+sessionRouter.delete('/:id/materials/:materialId', authMiddleware, deleteMaterial);
 
 export default sessionRouter;

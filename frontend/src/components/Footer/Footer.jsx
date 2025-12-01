@@ -23,7 +23,7 @@ const Footer = () => {
                 </div>                
             </div>
             <div className='footer-bottom'>
-                <p> 2025 Copyrights by tthaillong - 4rkiva - Quang1226 - Lunafiah - Mytranha - hcumt - qho244</p>
+                <p> © 2025 Copyrights by tthaillong - 4rkiva - Quang1226 - Lunafiah - Mytranha - hcumt - qho244</p>
             </div>
         </div>
     );
