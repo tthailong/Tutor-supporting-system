@@ -3,6 +3,7 @@ import './Sessioncard.css'
 import RatingDisplay from './RatingDisplay';
 import FeedbackForm from './FeedbackForm';
 import ProgressTracker from './ProgressTracker';
+import { Link } from 'react-router-dom';
 
 const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDelete }) => {
   // Sync state with props when parent re-renders (e.g. after list refresh)
@@ -14,7 +15,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
     setSession(sessionData);
   }, [sessionData]);
 
-    // Inside SessioncardWithFeedback
+  // Inside SessioncardWithFeedback
   const handleFeedbackSubmit = (feedbackData) => {
     setSession(prev => ({ ...prev, studentFeedback: feedbackData }));
     setShowFeedbackForm(false);
@@ -24,7 +25,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
     setSession(prev => ({ ...prev, tutorProgress: progressData }));
     setShowProgressTracker(false);
   };
-  
+
   // Safe defaults
   const studentFeedback = session.studentFeedback || { submitted: false, rating: 0 };
   const tutorProgress = session.tutorProgress || { lastUpdated: null };
@@ -35,15 +36,17 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
     <div className="session-card">
       <div className="session-details-container">
         <div className="session-details-left">
-           <div className="title">{title}</div>
-           <div className="subtitle-line">
-             <div className="time-and-location">
-               <span>{time}</span> <span>{location}</span>
-             </div>
-             <div className="capacity">{signedUpCount}/{capacity}</div>
-           </div>
-           
-                     {/* NEW: Feedback Section */}
+          <Link to={`/session/${session._id}`} className="title-link">
+            <div className="title">{title}</div>
+          </Link>
+          <div className="subtitle-line">
+            <div className="time-and-location">
+              <span>{time}</span> <span>{location}</span>
+            </div>
+            <div className="capacity">{signedUpCount}/{capacity}</div>
+          </div>
+
+          {/* NEW: Feedback Section */}
           <div className="feedback-section">
             {role === 'student' && (
               <div className="student-feedback">
@@ -63,7 +66,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
                     </div>
                   </div>
                 ) : (
-                  <button 
+                  <button
                     className="give-feedback-btn"
                     onClick={() => setShowFeedbackForm(true)}
                   >
@@ -72,7 +75,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
                 )}
               </div>
             )}
-            
+
             {role === 'tutor' && (
               <div className="tutor-feedback">
                 {tutorProgress.lastUpdated ? (
@@ -92,7 +95,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
                     </div>
                   </div>
                 ) : (
-                  <button 
+                  <button
                     className="record-progress-btn"
                     onClick={() => setShowProgressTracker(true)}
                   >
@@ -103,7 +106,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
             )}
           </div>
         </div>
-        
+
 
         <div className="action-icons">
           {/* NEW: Add feedback icon for students */}
@@ -112,11 +115,11 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
               ⭐
             </span>
           )}
-          
+
           <span onClick={() => handleReschedule(session)} title="Reschedule">
             🗓️
           </span>
-          
+
           {role === 'tutor' && (
             <>
               {/* NEW: Add progress tracker icon for tutors */}
@@ -157,7 +160,7 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
 
 const Sessioncard = ({ data, role = 'student', onEdit, onDelete }) => {
   return (
-    <SessioncardWithFeedback 
+    <SessioncardWithFeedback
       sessionData={data}
       role={role}
       onEdit={onEdit}

@@ -227,6 +227,64 @@ export const getSessionsByTutor = async (req, res) => {
   }
 };
 
+const flattenSchedule = (schedule) => {
+  const result = [];
+
+  for (const [dateKey, slots] of schedule.entries()) {
+    const baseDate = new Date(dateKey);
+    slots.forEach(s => {
+      result.push({
+        date: baseDate,
+        start: s.start,
+        end: s.end
+      });
+    });
+  }
+  return result;
+};
+
+export const checkTutorLocationConflict = async (tutorId, newSlots, newLocation, excludeSessionId = null) => {
+  // Get all sessions of tutor
+  const sessions = await Session.find({
+    tutor: tutorId,
+    _id: { $ne: excludeSessionId }
+  });
+
+  for (const sess of sessions) {
+    for (const [dateKey, slots] of sess.schedule.entries()) {
+
+      slots.forEach(existing => {
+        const eStart = parseTime(existing.start);
+        const eEnd = parseTime(existing.end);
+
+        // Compare to new schedule
+        newSlots.forEach(newSlot => {
+          const sDateKey = newSlot.date.toISOString().split("T")[0];
+
+          if (sDateKey !== dateKey) return;
+
+          const nStart = parseTime(newSlot.start);
+          const nEnd = parseTime(newSlot.end);
+
+          const overlap = (nStart < eEnd && nEnd > eStart);
+
+          if (overlap && sess.location !== newLocation) {
+            // ❌ Same time, same day, DIFF location
+            throw new Error(
+              `Tutor cannot be in two locations at the same time on ${dateKey}: ` +
+              `${existing.start}-${existing.end} at ${sess.location} and ` +
+              `${newSlot.start}-${newSlot.end} at ${newLocation}`
+            );
+          }
+        });
+      });
+    }
+  }
+
+  return false;
+};
+
+
 export const updateSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -244,19 +302,20 @@ export const updateSession = async (req, res) => {
       const keys = Object.keys(updates);
       const hasIllegalField = keys.some(key => !allowedFields.includes(key));
 
-      if (hasIllegalField) {
-        return res.status(403).json({
-          message: "Students are enrolled. You can only edit Capacity, Description, or Location."
-        });
-      }
+      //if (hasIllegalField) {
+      //  return res.status(403).json({
+      //    message: "Students are enrolled. You can only edit Capacity, Description, or Location."
+      //  });
+      //}
 
       // Check Location Conflict Only
       if (updates.location && updates.location !== session.location) {
-        const hasConflict = await Session.checkLocationConflict(
+        const newSlots = flattenSchedule(session.schedule);
+
+        const hasConflict = await checkTutorLocationConflict(
+          session.tutor,
+          newSlots,
           updates.location,
-          session.timeTable,
-          session.startDate,
-          session.duration,
           sessionId
         );
         if (hasConflict) return res.status(400).json({ message: "New location conflicts with another session." });
@@ -290,7 +349,9 @@ export const updateSession = async (req, res) => {
         const newStart = updates.startDate || session.startDate;
         const newDur = updates.duration || session.duration;
 
-        const locConflict = await Session.checkLocationConflict(newLoc, newTable, newStart, newDur, sessionId);
+        const newSlots = flattenSchedule(session.schedule);
+        const locConflict = await checkTutorLocationConflict(session.tutor, newSlots, newLoc, sessionId);
+
         if (locConflict) return res.status(400).json({ message: "Location/Time conflict." });
       }
 
@@ -314,19 +375,26 @@ export const deleteSession = async (req, res) => {
 
     if (!session) return res.status(404).json({ message: "Session not found" });
 
-    // Rule: Only allow delete if no students enrolled
     if (session.students.length > 0) {
       return res.status(403).json({ message: "Cannot delete session with enrolled students." });
     }
 
     const tutorId = session.tutor;
 
+    // Delete session
     await Session.findByIdAndDelete(sessionId);
 
-    // Remove from Tutor BookedSlots
-    await Tutor.findByIdAndUpdate(tutorId, {
-      $pull: { bookedSlots: { sessionId: sessionId } }
-    });
+    // Remove booked slots from Tutor
+    const tutor = await Tutor.findById(tutorId);
+
+    for (const [dateKey, slots] of tutor.bookedSlots.entries()) {
+      const filtered = slots.filter(s => s.sessionId.toString() !== sessionId);
+
+      if (filtered.length === 0) tutor.bookedSlots.delete(dateKey);
+      else tutor.bookedSlots.set(dateKey, filtered);
+    }
+
+    await tutor.save();
 
     return res.status(200).json({
       success: true,
@@ -334,9 +402,94 @@ export const deleteSession = async (req, res) => {
     });
 
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
+};
+
+// Get session details by ID
+export const getSessionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const session = await Session.findById(id)
+      .populate('tutor', 'name email')
+      .populate('students', 'name email');
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    return res.status(200).json({ success: true, session });
+  } catch (error) {
+    console.error('Get session error:', error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+// Add material to session
+export const addMaterial = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, type, content, description } = req.body;
+    const userId = req.user.id; // From auth middleware
+
+    const session = await Session.findById(id).populate({
+      path: 'tutor',
+      select: 'userId'
     });
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    // Check if user is the tutor
+    // if (!session.tutor.userId) {
+    //  return res.status(403).json({ message: 'Only the session tutor can add materials' });
+    //}
+    const newMaterial = {
+      title,
+      type,
+      content,
+      description,
+      addedBy: userId,
+      createdAt: new Date()
+    };
+
+    session.materials.push(newMaterial);
+    await session.save();
+
+    return res.status(200).json({ success: true, session });
+  } catch (error) {
+    console.error('Add material error:', error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+// Delete material from session
+export const deleteMaterial = async (req, res) => {
+  try {
+    const { id, materialId } = req.params;
+    const userId = req.user._id;
+
+    const session = await Session.findById(id).populate('tutor');
+
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    // Check if user is the tutor
+    //if (!session.tutor.userId) {
+    //  return res.status(403).json({ message: 'Only the session tutor can delete materials' });
+    //}
+
+    session.materials = session.materials.filter(
+      m => m._id.toString() !== materialId
+    );
+
+    await session.save();
+
+    return res.status(200).json({ success: true, session });
+  } catch (error) {
+    console.error('Delete material error:', error);
+    return res.status(500).json({ message: error.message });
   }
 };

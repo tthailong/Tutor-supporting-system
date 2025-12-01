@@ -15,6 +15,7 @@ import StudentViewCourse from './pages/StudentViewCourse/StudentViewCourse'
 import SelectTimeSlot from './pages/SelectTimeSlot/SelectTimeSlot'
 import NotificationsPage from './pages/NotificationPage/NotificationPage';
 import Awards from './pages/Awards/Awards';
+import SessionDetail from './components/SessionDetail/SessionDetail';
 
 
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
           <Route path='/profile' element={<Manageprofile />} />
           <Route path='/tutoractivities' element={<Setavailabililty />} />
           <Route path='/tutorsessions' element={<Tutorviewsessions />} />
+          <Route path="/session/:id" element={<SessionDetail />} />
           <Route path='/tutormatching' element={<TutorMatching />}>
             <Route index element={<Optionlist />} />
             <Route path='manual' element={<Manual />} />

@@ -64,6 +64,8 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData }) => {
     }
     // Basic check: Ensure selected date is not in the past relative to the current date string
     if (formData.startDate < getTodayDateString()) { alert("Start Date cannot be in the past."); return; }
+
+
     onSave(formData);
   };
 
@@ -78,7 +80,7 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData }) => {
         <form className="modal-form" onSubmit={handleSubmit}>
 
           <div className="form-group full-width">
-            <label>Subject Name *</label>
+            <label>Subject Name <span className="required">*</span></label>
             <select name="name" value={formData.name} onChange={handleChange} disabled={isLocked}>
               <option value="" disabled>Select a subject</option>
               {SUBJECTS.map(sub => <option key={sub} value={sub}>{sub}</option>)}
@@ -86,7 +88,7 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData }) => {
           </div>
 
           <div className="form-group">
-            <label>Location *</label>
+            <label>Location <span className="required">*</span></label>
             <input type="text" name="location" value={formData.location} onChange={handleChange} />
           </div>
 
@@ -96,7 +98,7 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData }) => {
           </div>
 
           <div className="form-group">
-            <label>Start Date * {isLocked && "(Locked due to enrollment)"}</label>
+            <label>Start Date <span className="required">*</span> {isLocked && "(Locked due to enrollment)"}</label>
             <input
               type="date"
               name="startDate"
@@ -108,12 +110,12 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData }) => {
           </div>
 
           <div className="form-group">
-            <label>Duration * (Weeks)</label>
+            <label>Duration <span className="required">*</span> (Weeks)</label>
             <input type="number" name="duration" value={formData.duration} onChange={handleChange} disabled={isLocked} min="1" max="15" />
           </div>
 
           <div className="form-group full-width">
-            <label>Time Slots * {isLocked && "(Locked due to enrollment)"}</label>
+            <label>Time Slots <span className="required">*</span> {isLocked && "(Locked due to enrollment)"}</label>
             <div className={`timeslots-grid ${isLocked ? 'disabled-grid' : ''}`}>
               {TIME_SLOTS.map(slot => (
                 <label key={slot} className={`slot-checkbox ${formData.timeSlots.includes(slot) ? 'selected' : ''}`}>
@@ -128,12 +130,13 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData }) => {
             <label>Description</label>
             <textarea name="description" value={formData.description || ""} onChange={handleChange} rows="3" />
           </div>
-
           <div className="modal-actions full-width">
             <button type="button" className="btn-cancel" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-save">Save</button>
           </div>
+
         </form>
+
       </div>
     </div>
   );

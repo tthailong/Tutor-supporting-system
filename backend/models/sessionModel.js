@@ -7,8 +7,8 @@ import studentModel from "./studentModel.js";
 // TIME ENUM (Same as Tutor)
 // --------------------
 const timeEnum = [
-  "07:00","08:00","09:00","10:00","11:00",
-  "12:00","13:00","14:00","15:00","16:00","17:00"
+  "07:00", "08:00", "09:00", "10:00", "11:00",
+  "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"
 ];
 
 // --------------------
@@ -64,7 +64,7 @@ const sessionSchema = new mongoose.Schema({
 
   schedule: {
     type: Map,
-    of: [timeSlotSchema], 
+    of: [timeSlotSchema],
     required: true
   },
 
@@ -72,26 +72,39 @@ const sessionSchema = new mongoose.Schema({
   startDate: { type: Date, required: true }, // Useful for sorting
   duration: { type: Number, required: true }, // in weeks
 
-  
+
   capacity: { type: Number, required: true },
   description: { type: String },
 
-  students: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student" }], 
+  students: [{ type: mongoose.Schema.Types.ObjectId, ref: "Student" }],
 
-  evaluations: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "SessionEvaluation" 
+  evaluations: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "SessionEvaluation"
   }],
 
-  studentProgress: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "StudentProgress" 
+  studentProgress: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "StudentProgress"
   }],
-    status: {
+  status: {
+    type: String,
+    enum: ['Scheduled', 'Rescheduled', 'Completed', 'Cancelled'],
+    default: 'Scheduled'
+  },
+
+  materials: [{
+    title: { type: String, required: true },
+    type: {
       type: String,
-      enum: ['Scheduled', 'Rescheduled', 'Completed', 'Cancelled'],
-      default: 'Scheduled'
-    }
+      enum: ['link', 'text', 'file'],
+      required: true
+    },
+    content: { type: String },
+    description: { type: String },
+    addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now }
+  }],
 
 }, { timestamps: true });
 
@@ -120,7 +133,7 @@ sessionSchema.pre("save", function (next) {
 // METHOD: Get All Specific Dates
 // (Helper to easily extract dates for the Tutor BookedSlots update)
 // --------------------
-sessionSchema.methods.getSessionDates = function() {
+sessionSchema.methods.getSessionDates = function () {
   const allBookings = [];
   const schedule = this.schedule || new Map();
 

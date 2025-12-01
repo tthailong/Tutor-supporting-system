@@ -1,90 +1,103 @@
 .session-card {
-    display: flex;
-    padding-left: 200px;
-    flex-direction: column;
-    padding: 18px 24px;
-    margin-bottom: 15px;
-    justify-content: center;
+  display: flex;
+  padding-left: 200px;
+  flex-direction: column;
+  padding: 18px 24px;
+  margin-bottom: 15px;
+  justify-content: center;
 
-    background-color: white;
-    border-radius: 8px;
-    border: 1px solid #eee;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03); /* Very light shadow */
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+  /* Very light shadow */
 }
 
 
 .session-details-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center; 
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .session-details-left {
-    flex-grow: 1;
-    max-width: calc(100% - 100px); 
+  flex-grow: 1;
+  max-width: calc(100% - 100px);
 }
 
 
 .session-card .title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 5px; 
-    line-height: 1.3;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+
+.title-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.title-link:hover .title {
+  color: #4EAAF3;
+  transform: translateX(4px);
+  transition: all 0.2s;
 }
 
 .session-card .subtitle-line {
-    display: flex;
-    gap: 20px; 
-    font-size: 14px;
-    color: #666;
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+  color: #666;
 }
 
 .session-card .time-and-location {
-    display: flex;
-    gap: 15px;
-    margin-top: 5px;
-    font-size: 15px;
+  display: flex;
+  gap: 15px;
+  margin-top: 5px;
+  font-size: 15px;
 }
 
 .session-card .capacity {
-    font-weight: 500;
-    color: #333;
+  font-weight: 500;
+  color: #333;
 }
 
 
 .session-card .action-icons {
-    display: flex;
-    gap: 10px;
-    font-size: 20px; 
-    align-items: center;
-    color: #666;
-    flex-shrink: 0; 
+  display: flex;
+  gap: 10px;
+  font-size: 20px;
+  align-items: center;
+  color: #666;
+  flex-shrink: 0;
 }
 
 .session-card .action-icons span {
-    cursor: pointer;
-    transition: color 0.2s;
-    padding: 4px; 
-    border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 4px;
+  border-radius: 4px;
 }
 
 .session-card .action-icons span:hover {
-    color: #000;
-    background-color: #f0f0f0; 
+  color: #000;
+  background-color: #f0f0f0;
 }
 
 
 @media (max-width: 600px) {
-    .session-details-container {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+  .session-details-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-    .session-card .action-icons {
-        margin-top: 10px;
-        align-self: flex-end; 
-    }
+  .session-card .action-icons {
+    margin-top: 10px;
+    align-self: flex-end;
+  }
 }
 
 .feedback-section {
@@ -93,13 +106,15 @@
   border-top: 1px solid #f0f0f0;
 }
 
-.student-feedback, .tutor-feedback {
+.student-feedback,
+.tutor-feedback {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.give-feedback-btn, .record-progress-btn {
+.give-feedback-btn,
+.record-progress-btn {
   background: linear-gradient(135deg, #4299e1, #3182ce);
   color: white;
   border: none;
@@ -112,26 +127,30 @@
   align-self: flex-start;
 }
 
-.give-feedback-btn:hover, .record-progress-btn:hover {
+.give-feedback-btn:hover,
+.record-progress-btn:hover {
   background: linear-gradient(135deg, #3182ce, #2b6cb0);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
 }
 
-.submitted-feedback, .progress-info {
+.submitted-feedback,
+.progress-info {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.feedback-header, .progress-header {
+.feedback-header,
+.progress-header {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.feedback-label, .progress-label {
+.feedback-label,
+.progress-label {
   font-weight: 600;
   color: #4a5568;
   font-size: 13px;
@@ -148,7 +167,8 @@
   line-height: 1.4;
 }
 
-.feedback-date, .last-updated {
+.feedback-date,
+.last-updated {
   font-size: 12px;
   color: #718096;
   font-style: italic;
@@ -185,17 +205,21 @@
 
 /* Responsive updates */
 @media (max-width: 600px) {
-  .feedback-header, .progress-header {
+
+  .feedback-header,
+  .progress-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
   }
-  
-  .give-feedback-btn, .record-progress-btn {
+
+  .give-feedback-btn,
+  .record-progress-btn {
     align-self: stretch;
     text-align: center;
   }
 }
+
 /* Add to Sessioncard.css */
 .student-info-display {
   font-size: 13px;
