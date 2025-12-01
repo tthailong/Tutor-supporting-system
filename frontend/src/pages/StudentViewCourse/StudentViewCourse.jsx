@@ -50,7 +50,9 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
 
   return (
     <div className="course-card">
-      <h3>{course.subject}</h3>
+      <Link to={`/session/${session._id}`} className="title-link">
+        <h3>{course.subject}</h3>
+      </Link>
       <p>Tutor: {course.tutor?.name}</p>
       <p>
         Time: {firstDate} {firstSlot.start} - {firstSlot.end}
