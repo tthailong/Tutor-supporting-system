@@ -69,7 +69,12 @@ const Sessionlist = ({ role = 'tutor' }) => {
     if (!window.confirm("Are you sure you want to delete this session?")) return;
 
     try {
-      const res = await fetch(`${API_URL}/${session._id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_URL}/${session._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
       if (res.status === 403) {
         alert("Cannot delete: Students are already enrolled in this session.");

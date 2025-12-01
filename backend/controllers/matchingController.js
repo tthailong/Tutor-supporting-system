@@ -121,19 +121,24 @@ const checkSessionTimeOverlap = (sessionSchedule, studentTimeSlots) => {
  * @returns {Promise<Array>} Array of matching sessions with scores
  */
 const findMatchingSessions = async (subject, availableTimeSlots) => {
-  // Query sessions by subject, not full capacity, status = 'Scheduled'
+  // Query sessions by subject (using regex for partial match), not full capacity, status = 'Scheduled'
   const sessions = await sessionModel.find({
-    subject: subject,
+    subject: { $regex: subject, $options: 'i' }, // Case-insensitive partial match
     status: 'Scheduled',
     $expr: { $lt: [{ $size: "$students" }, "$capacity"] }
   })
   .populate('tutor', 'name rating')
   .lean();
   
+  console.log('🔍 DEBUG: Found sessions:', sessions.length);
+  console.log('🔍 DEBUG: Student time slots:', JSON.stringify(availableTimeSlots));
+  
   // Filter and score by time overlap
   const scoredSessions = sessions
     .map(session => {
+      console.log('🔍 DEBUG: Checking session:', session._id, 'Schedule:', JSON.stringify(session.schedule));
       const overlapScore = checkSessionTimeOverlap(session.schedule, availableTimeSlots);
+      console.log('🔍 DEBUG: Overlap score:', overlapScore);
       if (overlapScore === 0) return null; // No overlap
       
       let score = overlapScore; // Base score from time overlap
@@ -148,6 +153,7 @@ const findMatchingSessions = async (subject, availableTimeSlots) => {
     .filter(item => item !== null)
     .sort((a, b) => b.score - a.score);
   
+  console.log('🔍 DEBUG: Scored sessions:', scoredSessions.length);
   return scoredSessions;
 };
 
