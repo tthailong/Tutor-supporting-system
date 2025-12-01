@@ -81,42 +81,32 @@ const isSlotAvailable = (bookedSlots, requestedSlots) => {
 };
 
 /**
- * Check if student's time slots overlap with session schedule
+ * Check if student's preferred day matches session day
  * @param {Object} sessionSchedule - Session's schedule (Map converted to object)
  * @param {Array} studentTimeSlots - Student's available time slots [{dayOfWeek, startTime, endTime}]
- * @returns {Number} Overlap score (0 = no overlap, higher = better overlap)
+ * @returns {Number} Match score (10 if day matches, 0 if not)
  */
-const checkSessionTimeOverlap = (sessionSchedule, studentTimeSlots) => {
-  // If no time slots provided, return a base score to allow matching
+const checkSessionDayMatch = (sessionSchedule, studentTimeSlots) => {
+  // If no time slots provided, return base score
   if (!studentTimeSlots || studentTimeSlots.length === 0) {
-    return 5; // Base score when time preference not specified
+    return 5; // Base score when no preference specified
   }
   
-  let overlapScore = 0;
+  // Get student's preferred days
+  const studentDays = studentTimeSlots.map(slot => slot.dayOfWeek);
   
+  // Check if any session date matches student's preferred days
   for (const [date, timeSlots] of Object.entries(sessionSchedule)) {
     const sessionDate = new Date(date);
-    const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][sessionDate.getDay()];
+    const sessionDayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][sessionDate.getDay()];
     
-    // Check if student is available on this day
-    const studentSlotsForDay = studentTimeSlots.filter(slot => slot.dayOfWeek === dayOfWeek);
-    
-    for (const studentSlot of studentSlotsForDay) {
-      for (const sessionSlot of timeSlots) {
-        // Check time overlap - perfect fit gets highest score
-        if (sessionSlot.start <= studentSlot.startTime && sessionSlot.end >= studentSlot.endTime) {
-          overlapScore += 10; // Perfect fit
-        } else if (
-          (studentSlot.startTime >= sessionSlot.start && studentSlot.startTime < sessionSlot.end) ||
-          (studentSlot.endTime > sessionSlot.start && studentSlot.endTime <= sessionSlot.endTime)
-        ) {
-          overlapScore += 5; // Partial overlap
-        }
-      }
+    // If session day matches any of student's preferred days
+    if (studentDays.includes(sessionDayOfWeek)) {
+      return 10; // Day match!
     }
   }
   
-  return overlapScore;
+  return 0; // No day match
 };
 
 /**
@@ -138,50 +128,27 @@ const findMatchingSessions = async (subject, availableTimeSlots) => {
   console.log('🔍 DEBUG: Found sessions:', sessions.length);
   console.log('🔍 DEBUG: Student time slots:', JSON.stringify(availableTimeSlots));
   
-  const hasTimePreference = availableTimeSlots && availableTimeSlots.length > 0;
-  
-  // Filter and score by time overlap
+  // Score sessions
   const scoredSessions = sessions
     .map(session => {
       console.log('🔍 DEBUG: Checking session:', session._id, 'Schedule:', JSON.stringify(session.schedule));
       
       let score = 0;
       
-      // SCORING CRITERIA 1: Time Overlap (if time preference provided)
-      if (hasTimePreference) {
-        const overlapScore = checkSessionTimeOverlap(session.schedule, availableTimeSlots);
-        console.log('🔍 DEBUG: Overlap score:', overlapScore);
-        if (overlapScore === 0) return null; // No overlap, skip this session
-        score += overlapScore;
-      } else {
-        // No time preference - give base score and prioritize by session date
-        score += 5; // Base score
-        
-        // Bonus for upcoming sessions (prefer sooner sessions)
-        const sessionDates = Object.keys(session.schedule).sort();
-        if (sessionDates.length > 0) {
-          const firstSessionDate = new Date(sessionDates[0]);
-          const daysUntilSession = Math.ceil((firstSessionDate - new Date()) / (1000 * 60 * 60 * 24));
-          
-          // Prefer sessions starting within next 7 days
-          if (daysUntilSession >= 0 && daysUntilSession <= 7) {
-            score += 3;
-          } else if (daysUntilSession > 7 && daysUntilSession <= 14) {
-            score += 1;
-          }
-        }
+      // SCORING CRITERIA 1: Day Match (10 points if day matches, 0 if not)
+      const dayMatchScore = checkSessionDayMatch(session.schedule, availableTimeSlots);
+      console.log('🔍 DEBUG: Day match score:', dayMatchScore);
+      
+      if (dayMatchScore === 0 && availableTimeSlots && availableTimeSlots.length > 0) {
+        return null; // Skip sessions that don't match student's preferred day
       }
       
-      // SCORING CRITERIA 2: Tutor Rating
+      score += dayMatchScore;
+      
+      // SCORING CRITERIA 2: Tutor Rating (0-5 points)
       if (session.tutor.rating > 4.5) score += 5;
       else if (session.tutor.rating > 4.0) score += 3;
       else if (session.tutor.rating > 3.5) score += 1;
-      
-      // SCORING CRITERIA 3: Available Capacity
-      const availableSpots = session.capacity - session.students.length;
-      if (availableSpots > 5) score += 3; // Lots of space
-      else if (availableSpots > 3) score += 2; // Good space
-      else if (availableSpots > 0) score += 1; // Some space
       
       console.log('🔍 DEBUG: Final score:', score);
       return { session, score };
@@ -418,8 +385,15 @@ export const autoMatch = asyncHandler(async (req, res) => {
   const startTime = Date.now();
   const { subject, description, availableTimeSlots, priorityLevel } = req.validatedData;
   
-  // For testing: use hardcoded student ID if auth is disabled
-  const studentId = req.user?.id || '69285ff4fcc2424d7f1b9234';
+  // Get authenticated student ID
+  const studentId = req.user?.id;
+  
+  if (!studentId) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required. Please login to use auto-match."
+    });
+  }
   
   try {
     // --------------------
@@ -442,83 +416,55 @@ export const autoMatch = asyncHandler(async (req, res) => {
         matchScore: bestSessionMatch.score,
         availableSpots: session.capacity - session.students.length
       });
-      
-      // Enroll student in the session
-      try {
-        // Find student profile
-        const studentProfile = await Student.findOne({ userId: studentId });
-        if (!studentProfile) {
-          throw new Error("Student profile not found");
-        }
-        
-        // Add student to session
-        const updatedSession = await sessionModel.findByIdAndUpdate(
-          session._id,
-          { $push: { students: studentProfile._id } },
-          { new: true }
-        ).populate('tutor', 'name rating');
-        
-        // Create registration record for tracking
-        const registration = await registrationModel.create({
-          studentId,
-          tutorId: session.tutor._id,
-          subject,
-          description,
-          preferredTimeSlots: availableTimeSlots,
-          status: "Matched",
-          type: "Auto_Session_Enrollment",
-          matchScore: bestSessionMatch.score,
-          matchedSessionId: session._id,
-          processingTime: Date.now() - startTime
-        });
-        
-        // Log successful session enrollment
-        await tutorMatchLogModel.create({
-          registrationId: registration._id,
-          attemptedAt: new Date(),
-          success: true,
-          matchScore: bestSessionMatch.score,
-          processingTime: Date.now() - startTime,
-          candidateTutors: [],
-          selectedTutorId: session.tutor._id,
-          enrolledInSessionId: session._id
-        });
-        
-        // Notify student of session enrollment
-        await notifyStudentSessionEnrollment(studentId, updatedSession, registration);
-        
-        logger.info("Auto-match: Student enrolled in existing session", {
-          registrationId: registration._id,
-          studentId,
-          sessionId: session._id,
-          tutorId: session.tutor._id,
-          matchScore: bestSessionMatch.score,
-          processingTime: Date.now() - startTime
-        });
-        
-        return res.status(201).json({
-          success: true,
-          message: "Successfully enrolled in existing session!",
-          registration,
-          enrolledSession: {
-            _id: updatedSession._id,
-            subject: updatedSession.subject,
-            tutor: updatedSession.tutor,
-            location: updatedSession.location,
-            capacity: updatedSession.capacity,
-            enrolledStudents: updatedSession.students.length
-          },
-          matchScore: bestSessionMatch.score,
-          type: "session_enrollment"
-        });
-      } catch (enrollmentError) {
-        logger.error("Failed to enroll student in session, falling back to tutor matching", {
-          error: enrollmentError.message,
-          sessionId: session._id,
-          studentId
-        });
-        // Continue to tutor matching fallback below
-      }
+
+      const registration = await registrationModel.create({
+        studentId,
+        tutorId: session.tutor._id,
+        subject,
+        description,
+        preferredTimeSlots: availableTimeSlots,
+        status: "Matched",
+        type: "Auto",
+        matchScore: bestSessionMatch.score,
+        matchedSessionId: session._id,
+        processingTime: Date.now() - startTime,
+        isEnrollmentConfirmed: false
+      });
+
+      await tutorMatchLogModel.create({
+        registrationId: registration._id,
+        attemptedAt: new Date(),
+        success: true,
+        matchScore: bestSessionMatch.score,
+        processingTime: Date.now() - startTime,
+        candidateTutors: [],
+        selectedTutorId: session.tutor._id
+      });
+
+      await notifyStudentMatchSuccess(studentId, session.tutor, registration);
+
+      return res.status(201).json({
+        success: true,
+        message: "Session available. Please accept to finalize enrollment.",
+        registration,
+        matchedTutor: {
+          _id: session.tutor._id,
+          name: session.tutor.name,
+          rating: session.tutor.rating,
+          expertise: session.subject ? [session.subject] : session.tutor.expertise,
+          bio: session.tutor.bio
+        },
+        proposedSession: {
+          _id: session._id,
+          subject: session.subject,
+          location: session.location,
+          capacity: session.capacity,
+          enrolledStudents: session.students.length,
+          schedule: session.schedule
+        },
+        matchScore: bestSessionMatch.score,
+        type: "session_proposal"
+      });
     }
     
     // --------------------
@@ -762,6 +708,134 @@ export const autoMatch = asyncHandler(async (req, res) => {
     
     throw error;
   }
+});
+
+/**
+ * POST /api/matching/auto/accept
+ * Confirm enrollment after auto-match proposes an existing session
+ */
+export const acceptAutoMatch = asyncHandler(async (req, res) => {
+  const studentId = req.user?.id;
+  const { registrationId } = req.body;
+
+  if (!studentId) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required. Please login to confirm matching."
+    });
+  }
+
+  if (!registrationId) {
+    return res.status(400).json({
+      success: false,
+      message: "registrationId is required"
+    });
+  }
+
+  const registration = await registrationModel.findById(registrationId);
+
+  if (!registration) {
+    return res.status(404).json({
+      success: false,
+      message: "Registration not found"
+    });
+  }
+
+  if (registration.studentId.toString() !== studentId) {
+    return res.status(403).json({
+      success: false,
+      message: "You are not authorized to confirm this registration"
+    });
+  }
+
+  if (!registration.matchedSessionId) {
+    return res.status(400).json({
+      success: false,
+      message: "No session is associated with this registration"
+    });
+  }
+
+  if (registration.isEnrollmentConfirmed) {
+    return res.status(200).json({
+      success: true,
+      message: "Enrollment already confirmed",
+      registration
+    });
+  }
+
+  const session = await sessionModel
+    .findById(registration.matchedSessionId)
+    .populate('tutor', 'name rating expertise bio');
+
+  if (!session) {
+    return res.status(404).json({
+      success: false,
+      message: "Matched session no longer exists"
+    });
+  }
+
+  if (session.students.length >= session.capacity) {
+    return res.status(409).json({
+      success: false,
+      message: "Session is already full"
+    });
+  }
+
+  const studentProfile = await Student.findOne({ userId: studentId });
+
+  if (!studentProfile) {
+    return res.status(404).json({
+      success: false,
+      message: "Student profile not found"
+    });
+  }
+
+  const alreadyJoined = session.students.some(student =>
+    student.toString() === studentProfile._id.toString()
+  );
+
+  if (alreadyJoined) {
+    registration.isEnrollmentConfirmed = true;
+    registration.enrollmentConfirmedAt = new Date();
+    await registration.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "You are already enrolled in this session",
+      registration,
+      session
+    });
+  }
+
+  session.students.push(studentProfile._id);
+  await session.save();
+
+  registration.isEnrollmentConfirmed = true;
+  registration.enrollmentConfirmedAt = new Date();
+  await registration.save();
+
+  await notifyStudentSessionEnrollment(studentId, session, registration);
+
+  logger.info("Auto-match enrollment confirmed", {
+    registrationId: registration._id,
+    studentId,
+    sessionId: session._id,
+    tutorId: session.tutor?._id
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Enrollment confirmed!",
+    registration,
+    session: {
+      _id: session._id,
+      subject: session.subject,
+      tutor: session.tutor,
+      location: session.location,
+      capacity: session.capacity,
+      enrolledStudents: session.students.length
+    }
+  });
 });
 
 /**

@@ -3,6 +3,7 @@ import {
   getTutors,
   createManualMatchRequest,
   autoMatch,
+  acceptAutoMatch,
   getMyRequests
 } from "../controllers/matchingController.js";
 import {
@@ -45,6 +46,14 @@ matchingRouter.post(
   requireRole("Student"),
   validateAutoMatchRequest,
   autoMatch
+);
+
+// Confirm auto-match enrollment
+matchingRouter.post(
+  "/auto/accept",
+  authMiddleware,
+  requireRole("Student"),
+  acceptAutoMatch
 );
 
 // Get student's match requests

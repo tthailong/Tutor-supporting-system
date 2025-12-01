@@ -106,6 +106,15 @@ export const autoMatch = (data) => {
 };
 
 /**
+ * Confirm enrollment for an auto-match proposal
+ * @param {Object} data - { registrationId }
+ * @returns {Promise}
+ */
+export const acceptAutoMatchProposal = (data) => {
+  return api.post('/api/matching/auto/accept', data);
+};
+
+/**
  * Get student's match requests
  * @returns {Promise} Axios response with requests array
  */

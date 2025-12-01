@@ -72,6 +72,19 @@ const registrationSchema = new mongoose.Schema({
     enum: ["Manual", "Auto"],
     required: [true, "Request type is required"]
   },
+  matchedSessionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Session",
+    default: null
+  },
+  isEnrollmentConfirmed: {
+    type: Boolean,
+    default: false
+  },
+  enrollmentConfirmedAt: {
+    type: Date,
+    default: null
+  },
   matchScore: {
     type: Number,
     default: 0,

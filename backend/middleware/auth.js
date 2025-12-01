@@ -21,10 +21,18 @@ export const authMiddleware = async (req, res, next) => {
     
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id || decoded.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token payload"
+      });
+    }
     
     // Attach user info to request
     req.user = {
-      id: decoded.id,
+      id: userId,
       role: decoded.role,
       email: decoded.email
     };

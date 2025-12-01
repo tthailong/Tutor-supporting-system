@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import './Automatic.css';
-import { FaCog, FaCheckCircle, FaTimesCircle, FaUserCircle, FaArrowRight } from 'react-icons/fa';
+import { FaCog, FaCheckCircle, FaTimesCircle, FaArrowRight, FaStar } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { autoMatch } from '../../../services/apiService';
+import { autoMatch, acceptAutoMatchProposal } from '../../../services/apiService';
 
 const Automatic = () => {
   const navigate = useNavigate();
@@ -15,7 +15,10 @@ const Automatic = () => {
     additionalNotes: ''
   });
   const [matchedTutor, setMatchedTutor] = useState(null);
+  const [proposedSession, setProposedSession] = useState(null);
+  const [registrationId, setRegistrationId] = useState(null);
   const [matchScore, setMatchScore] = useState(0);
+  const [isAccepting, setIsAccepting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleInputChange = (e) => {
@@ -49,32 +52,59 @@ const Automatic = () => {
       });
 
       // Check if match was successful
-      if (response.data.registration.status === 'Matched') {
-        setMatchedTutor(response.data.matchedTutor);
-        setMatchScore(response.data.matchScore);
+      const { registration, matchedTutor: tutorMatch, proposedSession: sessionMatch, matchScore: score } = response.data;
+
+      if (registration?.status === 'Matched') {
+        const resolvedTutor = tutorMatch || sessionMatch?.tutor || null;
+        setMatchedTutor(resolvedTutor);
+        setProposedSession(sessionMatch || null);
+        setRegistrationId(registration?._id || null);
+        setMatchScore(score ?? 0);
         setStep('success');
       } else {
         // Coordinator Review
         setErrorMessage(response.data.message || 'No suitable match found');
+        setMatchedTutor(null);
+        setProposedSession(null);
+        setRegistrationId(null);
         setStep('failed');
       }
     } catch (error) {
       console.error('Auto-match error:', error);
       setErrorMessage(error.response?.data?.message || 'Failed to find a match');
+      setMatchedTutor(null);
+      setProposedSession(null);
+      setRegistrationId(null);
       setStep('failed');
     }
   };
 
-  const handleAccept = () => {
-    alert(`Great! You have been matched with ${matchedTutor.name}.`);
-    navigate('/tutorsessions');
+  const handleAccept = async () => {
+    if (!registrationId) return;
+
+    try {
+      setIsAccepting(true);
+      const response = await acceptAutoMatchProposal({ registrationId });
+      const confirmedTutorName = matchedTutor?.name || response.data.session?.tutor?.name || 'your tutor';
+      alert(`Great! You have been matched with ${confirmedTutorName}.`);
+      navigate('/studentviewcourse');
+    } catch (error) {
+      console.error('Confirm match error:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to confirm enrollment.');
+      setStep('failed');
+    } finally {
+      setIsAccepting(false);
+    }
   };
 
   const handleReject = () => {
     if (window.confirm("Are you sure you want to reject this match? We can try again.")) {
       setStep('form'); 
       setMatchedTutor(null);
+      setProposedSession(null);
+      setRegistrationId(null);
       setMatchScore(0);
+      setErrorMessage('');
     }
   };
 
@@ -155,7 +185,7 @@ const Automatic = () => {
           </div>
         )}
 
-        {step === 'success' && matchedTutor && (
+        {step === 'success' && (
           <div className="state-success">
             <div className="success-icon-large">
               <FaCheckCircle />
@@ -164,39 +194,49 @@ const Automatic = () => {
             <div className="match-score-badge">
               Match Score: {matchScore} / 17 points
             </div>
+            {proposedSession && (
+              <div className="session-summary">
+                <p>
+                  Reserve your seat in <strong>{proposedSession.subject}</strong> at {proposedSession.location}.
+                </p>
+                <p>Current enrollment: {proposedSession.enrolledStudents}/{proposedSession.capacity}</p>
+              </div>
+            )}
             
-            <div className="tutor-preview">
-              <div className="tutor-avatar-large">
-                <img 
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(matchedTutor.name)}&size=150&background=4CAF50&color=fff&bold=true`}
-                  alt={matchedTutor.name}
-                  style={{
-                    width: '100px',
-                    height: '100px',
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '3px solid #4CAF50'
-                  }}
-                />
-              </div>
-              <h3>{matchedTutor.name}</h3>
-              <p className="subject">{matchedTutor.expertise?.join(', ')}</p>
-              <div className="tutor-stats">
-                <div className="stat">
-                  <FaStar style={{ color: '#ffd700' }} />
-                  <span>{matchedTutor.rating} Rating</span>
+            {matchedTutor && (
+              <div className="tutor-preview">
+                <div className="tutor-avatar-large">
+                  <img 
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(matchedTutor.name)}&size=150&background=4CAF50&color=fff&bold=true`}
+                    alt={matchedTutor.name}
+                    style={{
+                      width: '100px',
+                      height: '100px',
+                      borderRadius: '50%',
+                      objectFit: 'cover',
+                      border: '3px solid #4CAF50'
+                    }}
+                  />
                 </div>
+                <h3>{matchedTutor.name}</h3>
+                <p className="subject">{matchedTutor.expertise?.join(', ')}</p>
+                <div className="tutor-stats">
+                  <div className="stat">
+                    <FaStar style={{ color: '#ffd700' }} />
+                    <span>{matchedTutor.rating} Rating</span>
+                  </div>
+                </div>
+                <p className="bio">{matchedTutor.bio}</p>
               </div>
-              <p className="bio">{matchedTutor.bio}</p>
-            </div>
+            )}
             
             <div className="next-steps">
-              <h4>What's Next?</h4>
+              <h4>Pipeline Checklist</h4>
               <ul>
-                <li>✅ Your tutor has been notified</li>
-                <li>⏳ Wait for tutor confirmation</li>
-                <li>📧 You'll receive an update via email</li>
-                <li>📅 Check your sessions page for details</li>
+                <li>👀 Review tutor + session details above</li>
+                <li>✅ Click "Accept Match" to lock your spot</li>
+                <li>📚 After acceptance, the class appears in My Courses</li>
+                <li>🔄 Prefer a different slot? Choose "Try Different Match"</li>
               </ul>
             </div>
             
@@ -204,8 +244,8 @@ const Automatic = () => {
               <button className="btn-secondary" onClick={handleReject}>
                 Try Different Match
               </button>
-              <button className="btn-primary" onClick={handleAccept}>
-                Accept Match
+              <button className="btn-primary" onClick={handleAccept} disabled={isAccepting || !registrationId}>
+                {isAccepting ? 'Confirming...' : 'Accept Match'}
               </button>
             </div>
           </div>
