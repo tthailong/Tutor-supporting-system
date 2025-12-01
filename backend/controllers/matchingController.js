@@ -87,6 +87,11 @@ const isSlotAvailable = (bookedSlots, requestedSlots) => {
  * @returns {Number} Overlap score (0 = no overlap, higher = better overlap)
  */
 const checkSessionTimeOverlap = (sessionSchedule, studentTimeSlots) => {
+  // If no time slots provided, return a base score to allow matching
+  if (!studentTimeSlots || studentTimeSlots.length === 0) {
+    return 5; // Base score when time preference not specified
+  }
+  
   let overlapScore = 0;
   
   for (const [date, timeSlots] of Object.entries(sessionSchedule)) {
@@ -103,7 +108,7 @@ const checkSessionTimeOverlap = (sessionSchedule, studentTimeSlots) => {
           overlapScore += 10; // Perfect fit
         } else if (
           (studentSlot.startTime >= sessionSlot.start && studentSlot.startTime < sessionSlot.end) ||
-          (studentSlot.endTime > sessionSlot.start && studentSlot.endTime <= sessionSlot.end)
+          (studentSlot.endTime > sessionSlot.start && studentSlot.endTime <= sessionSlot.endTime)
         ) {
           overlapScore += 5; // Partial overlap
         }
@@ -133,21 +138,52 @@ const findMatchingSessions = async (subject, availableTimeSlots) => {
   console.log('🔍 DEBUG: Found sessions:', sessions.length);
   console.log('🔍 DEBUG: Student time slots:', JSON.stringify(availableTimeSlots));
   
+  const hasTimePreference = availableTimeSlots && availableTimeSlots.length > 0;
+  
   // Filter and score by time overlap
   const scoredSessions = sessions
     .map(session => {
       console.log('🔍 DEBUG: Checking session:', session._id, 'Schedule:', JSON.stringify(session.schedule));
-      const overlapScore = checkSessionTimeOverlap(session.schedule, availableTimeSlots);
-      console.log('🔍 DEBUG: Overlap score:', overlapScore);
-      if (overlapScore === 0) return null; // No overlap
       
-      let score = overlapScore; // Base score from time overlap
+      let score = 0;
       
-      // Bonus points
+      // SCORING CRITERIA 1: Time Overlap (if time preference provided)
+      if (hasTimePreference) {
+        const overlapScore = checkSessionTimeOverlap(session.schedule, availableTimeSlots);
+        console.log('🔍 DEBUG: Overlap score:', overlapScore);
+        if (overlapScore === 0) return null; // No overlap, skip this session
+        score += overlapScore;
+      } else {
+        // No time preference - give base score and prioritize by session date
+        score += 5; // Base score
+        
+        // Bonus for upcoming sessions (prefer sooner sessions)
+        const sessionDates = Object.keys(session.schedule).sort();
+        if (sessionDates.length > 0) {
+          const firstSessionDate = new Date(sessionDates[0]);
+          const daysUntilSession = Math.ceil((firstSessionDate - new Date()) / (1000 * 60 * 60 * 24));
+          
+          // Prefer sessions starting within next 7 days
+          if (daysUntilSession >= 0 && daysUntilSession <= 7) {
+            score += 3;
+          } else if (daysUntilSession > 7 && daysUntilSession <= 14) {
+            score += 1;
+          }
+        }
+      }
+      
+      // SCORING CRITERIA 2: Tutor Rating
       if (session.tutor.rating > 4.5) score += 5;
-      const availableSpots = session.capacity - session.students.length;
-      if (availableSpots > 3) score += 2; // Prefer sessions with more space
+      else if (session.tutor.rating > 4.0) score += 3;
+      else if (session.tutor.rating > 3.5) score += 1;
       
+      // SCORING CRITERIA 3: Available Capacity
+      const availableSpots = session.capacity - session.students.length;
+      if (availableSpots > 5) score += 3; // Lots of space
+      else if (availableSpots > 3) score += 2; // Good space
+      else if (availableSpots > 0) score += 1; // Some space
+      
+      console.log('🔍 DEBUG: Final score:', score);
       return { session, score };
     })
     .filter(item => item !== null)
