@@ -1,8 +1,8 @@
-.navbar{
-    position: sticky;     
+.navbar {
+    position: sticky;
     top: 0;
-    height: 60px;               
-    z-index: 1000;        
+    height: 60px;
+    z-index: 1000;
     padding-left: 40px;
     padding-right: 40px;
     display: flex;
@@ -11,11 +11,11 @@
     background-color: #273988;
 }
 
-.navbar .logo{
+.navbar .logo {
     width: 40px;
 }
 
-.navbar-menu{
+.navbar-menu {
     display: flex;
     list-style: none;
     gap: 0px;
@@ -24,20 +24,20 @@
 
 }
 
-.navbar-right img{
+.navbar-right img {
     width: 20px;
     height: 20px;
     cursor: pointer;
     filter: brightness(0) invert(1);
 }
 
-.navbar-right{
+.navbar-right {
     display: flex;
     align-items: center;
     gap: 40px;
 }
 
-.navbar button{
+.navbar button {
     background: transparent;
     font-size: 16px;
     color: black;
@@ -45,11 +45,11 @@
 }
 
 .navbar button:hover {
-    text-decoration: underline; 
-    cursor: pointer; 
+    text-decoration: underline;
+    cursor: pointer;
 }
 
-.navbar .active{
+.navbar .active {
     padding-bottom: 18px;
     padding-top: 20px;
     padding-left: 8px;
@@ -57,7 +57,7 @@
     background-color: #0388B4;
 }
 
-.navbar .nonactive{
+.navbar .nonactive {
     padding-bottom: 18px;
     padding-top: 20px;
     padding-left: 8px;
@@ -65,15 +65,15 @@
     background: transparent;
 }
 
-.navbar li{
+.navbar li {
     cursor: pointer;
 }
 
-.navbar-noti{
+.navbar-noti {
     position: relative;
 }
 
-.navbar-noti .dot{
+.navbar-noti .dot {
     width: 8px;
     height: 8px;
     background-color: tomato;
@@ -81,4 +81,23 @@
     position: absolute;
     top: -2px;
     right: -2px;
+}
+
+.navbar-noti .notification-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background-color: white;
+    color: black;
+    border-radius: 50%;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 5px;
+    /* horizontal padding for numbers > 1 digit */
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
 }
