@@ -2,6 +2,8 @@
 .profile-root {
 	max-width: 880px;
 	margin: 28px auto;
+	/* ensure space for footer at small screens or custom zoom */
+	padding-bottom: 160px;
 	font-family: 'Segoe UI', Roboto, Arial, sans-serif;
 	color: #0b1220;
 }
@@ -108,13 +110,6 @@
 	align-items: flex-start;
 }
 .option.full-option span { display:block; margin-bottom:6px; font-weight:700; }
-
-/* Also support .field alias used in JSX */
-.option.field {
-	flex-direction: column;
-	align-items: flex-start;
-}
-.option.field span { display:block; margin-bottom:6px; font-weight:700; }
 
 .buttons-row { display:flex; gap:16px; justify-content:center; margin-top:18px; }
 .btn { padding:8px 24px; border-radius:20px; border:0; cursor:pointer; font-weight:800; font-size:14px; }
