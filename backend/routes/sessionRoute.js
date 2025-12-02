@@ -10,7 +10,7 @@ const upload = multer();
 sessionRouter.post("/create", authMiddleware, upload.none(), createSession);
 
 // Read (Get by Tutor)
-sessionRouter.get("/tutor/:tutorId", authMiddleware, getSessionsByTutor);
+sessionRouter.get("/tutors/:tutorId", authMiddleware, getSessionsByTutor);
 
 // Update
 sessionRouter.put("/:sessionId", authMiddleware, upload.none(), updateSession);
