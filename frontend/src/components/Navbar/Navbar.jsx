@@ -35,7 +35,11 @@ const Navbar = () => {
       <div className="navbar-right">
         <Link to={user ? "/notifications" : "/login"} className="navbar-noti">
           <img src={assets.noti} alt="" />
-          {unread > 0 && <div className="dot">{unread}</div>}
+          {unread > 0 && (
+            <div className="notification-badge">
+              {unread > 99 ? '99+' : unread}
+            </div>
+          )}
         </Link>
         <Link to='/login' className="navbar-noti">
           <img src={assets.account} alt="" />
