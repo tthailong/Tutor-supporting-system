@@ -11,7 +11,7 @@ const NotificationPage = () => {
   const TUTOR_ID = user?.tutorProfile;
   const API_URL = "http://localhost:4000/api/session";
 
-  const userId = user?._id;
+  const userId = user?.id;
   console.log("Derived userId:", userId);
 
   const [notifications, setNotifications] = useState([]);
