@@ -9,9 +9,10 @@ const Navbar = () => {
 
   const user = JSON.parse(localStorage.getItem("user"));
   const role = user?.role;// normalize role to lowercase
+  const userId = user?._id;
 
   useEffect(() => {
-    const userId = "69285ff4fcc2424d7f1b9234";
+    if (!userId) return;
     fetch(`/api/notifications/${userId}`)
       .then(res => res.json())
       .then(data => {
@@ -32,7 +33,7 @@ const Navbar = () => {
         )}
       </ul>
       <div className="navbar-right">
-        <Link to="/notifications" className="navbar-noti">
+        <Link to={user ? "/notifications" : "/login"} className="navbar-noti">
           <img src={assets.noti} alt="" />
           {unread > 0 && <div className="dot">{unread}</div>}
         </Link>
