@@ -65,6 +65,61 @@ export const deleteNotification = async (req, res) => {
 };
 
 
+// GET: Get all matching notifications for the same timeslot/subject/tutor
+export const getMatchingNotifications = async (req, res) => {
+    try {
+        const { notiId } = req.params;
+
+        // 1. Find the reference notification
+        const referenceNotification = await Notification.findById(notiId)
+            .populate('studentId', 'name email')
+            .populate('registrationId');
+
+        if (!referenceNotification) {
+            return res.status(404).json({ success: false, message: "Notification not found" });
+        }
+
+        if (referenceNotification.type !== "MANUAL_MATCH_REQUEST") {
+            return res.status(400).json({ success: false, message: "Invalid notification type" });
+        }
+
+        // 2. Find all matching notifications with same criteria
+        const matchingNotifications = await Notification.find({
+            type: "MANUAL_MATCH_REQUEST",
+            isRead: false,
+            user: referenceNotification.user, // Same tutor
+            subject: referenceNotification.subject,
+            "selectedTimeSlot.date": referenceNotification.selectedTimeSlot.date,
+            "selectedTimeSlot.startTime": referenceNotification.selectedTimeSlot.startTime,
+            "selectedTimeSlot.endTime": referenceNotification.selectedTimeSlot.endTime
+        })
+            .populate('studentId', 'name email')
+            .populate('registrationId');
+
+        // 3. Extract student and registration information
+        const studentData = matchingNotifications.map(n => ({
+            notificationId: n._id,
+            studentId: n.studentId?._id,
+            studentName: n.studentId?.name,
+            studentEmail: n.studentId?.email,
+            registrationId: n.registrationId?._id
+        })).filter(data => data.studentId); // Filter out any null student IDs
+
+        res.status(200).json({
+            success: true,
+            count: studentData.length,
+            students: studentData,
+            timeslot: referenceNotification.selectedTimeSlot,
+            subject: referenceNotification.subject
+        });
+
+    } catch (err) {
+        console.error("Error getting matching notifications:", err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+
 // POST: Confirm manual match request (Tutor confirms)
 export const confirmManualMatchRequest = async (req, res) => {
     try {
@@ -97,7 +152,7 @@ export const confirmManualMatchRequest = async (req, res) => {
 
         // 3. Create session from the selected timeslot
         const { date, startTime, endTime } = notification.selectedTimeSlot;
-        
+
         // Create schedule map with the selected date and time
         const scheduleMap = new Map();
         scheduleMap.set(date, [{
@@ -122,7 +177,7 @@ export const confirmManualMatchRequest = async (req, res) => {
         if (!tutor.bookedSlots) {
             tutor.bookedSlots = new Map();
         }
-        
+
         const existingSlots = tutor.bookedSlots.get(date) || [];
         existingSlots.push({
             start: startTime,
@@ -130,7 +185,7 @@ export const confirmManualMatchRequest = async (req, res) => {
             sessionId: newSession._id
         });
         tutor.bookedSlots.set(date, existingSlots);
-        
+
         await tutor.save();
 
         // 5. Update registration status

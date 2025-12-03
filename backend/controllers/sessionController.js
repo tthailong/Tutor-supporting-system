@@ -14,7 +14,7 @@ const parseTime = (t) => parseInt(t.replace(":", ""));
 // ---------------------------------------------------
 export const createSession = async (req, res) => {
   try {
-    const { tutorId, subject, location, schedule, duration, capacity, description, registrationId, studentIdToEnroll } = req.body;
+    const { tutorId, subject, location, schedule, duration, capacity, description, registrationId, studentIdToEnroll, studentIdsToEnroll, registrationIds, notificationIds } = req.body;
 
     // --------------------------
     // 1. Validate tutor exists
@@ -61,15 +61,21 @@ export const createSession = async (req, res) => {
     const expandedSchedule = new Map();
 
     let initialStudents = [];
-    if (studentIdToEnroll) {
-      // Find the Student Profile document where the userId field matches the ID passed from the notification
+    // Handle batch enrollment (multiple students)
+    if (studentIdsToEnroll && Array.isArray(studentIdsToEnroll) && studentIdsToEnroll.length > 0) {
+      for (const studentUserId of studentIdsToEnroll) {
+        const studentProfile = await Student.findOne({ userId: studentUserId });
+        if (studentProfile) {
+          initialStudents.push(studentProfile._id);
+        }
+      }
+    }
+    // Handle single student enrollment (backward compatibility)
+    else if (studentIdToEnroll) {
       const studentProfile = await Student.findOne({ userId: studentIdToEnroll });
-
       if (!studentProfile) {
         return res.status(404).json({ message: "Student profile not found for enrollment." });
       }
-
-      // 🛑 Use the Student Profile's primary ID (Student._id)
       initialStudents.push(studentProfile._id);
     }
     // Get the start date from the original schedule
@@ -152,28 +158,44 @@ export const createSession = async (req, res) => {
     await tutor.save();
 
     // 🛑 UPDATE REGISTRATION STATUS IF THIS CAME FROM A MATCH REQUEST
-    let registration;
-    if (registrationId) {
-      // ... (update registration logic) ...
+    let registrations = [];
+    // Handle batch registrations
+    if (registrationIds && Array.isArray(registrationIds) && registrationIds.length > 0) {
       const Registration = mongoose.model('Registration');
-      registration = await Registration.findById(registrationId);
+      for (const regId of registrationIds) {
+        const registration = await Registration.findById(regId);
+        if (registration) {
+          registration.status = "Matched";
+          registration.matchedSessionId = newSession._id;
+          await registration.save();
+          registrations.push(registration);
+        }
+      }
+    }
+    // Handle single registration (backward compatibility)
+    else if (registrationId) {
+      const Registration = mongoose.model('Registration');
+      const registration = await Registration.findById(registrationId);
       if (registration) {
         registration.status = "Matched";
         registration.matchedSessionId = newSession._id;
         await registration.save();
+        registrations.push(registration);
       }
     }
 
     // --------------------------
     // 🛑 STEP 8: NOTIFY STUDENT OF MATCH SUCCESS
     // --------------------------
-    if (registrationId && registration) {
-      const tutorUser = await User.findById(tutor.userId); // Fetch User document linked to tutor
-
+    // Determine which student IDs to notify
+    const studentIdsToNotify = studentIdsToEnroll && studentIdsToEnroll.length > 0
+      ? studentIdsToEnroll
+      : (studentIdToEnroll ? [studentIdToEnroll] : []);
+    // Send notifications to all enrolled students
+    for (const studentUserId of studentIdsToNotify) {
       await Notification.create({
-        // Send to the student's User ID
-        user: studentIdToEnroll,
-        studentId: studentIdToEnroll, // Add studentId for display in notification details
+        user: studentUserId,
+        studentId: studentUserId,
         title: "Match Confirmed!",
         message: `Your tutor ${tutor.name} has confirmed your session for ${subject}.`,
         type: "MATCH_SUCCESS",
@@ -186,9 +208,16 @@ export const createSession = async (req, res) => {
           endTime: newSessionDates[0].end
         }
       });
-
-      // Optional: Mark the original notification as read if you kept that logic
-      // E.g., if you pass notificationId, you can mark it read here too.
+    }
+    // Mark all related notifications as read
+    if (notificationIds && Array.isArray(notificationIds) && notificationIds.length > 0) {
+      await Notification.updateMany(
+        { _id: { $in: notificationIds } },
+        {
+          isRead: true,
+          relatedSession: newSession._id
+        }
+      );
     }
 
     // --------------------------
@@ -493,5 +522,103 @@ export const deleteMaterial = async (req, res) => {
   } catch (error) {
     console.error('Delete material error:', error);
     return res.status(500).json({ message: error.message });
+  }
+};
+
+// ---------------------------------------------------
+// GET TUTOR'S AVAILABLE SESSIONS (for student self-enrollment)
+// ---------------------------------------------------
+export const getTutorAvailableSessions = async (req, res) => {
+  try {
+    const { tutorId } = req.params;
+
+    const now = new Date();
+
+    // Find sessions that:
+    // - Belong to this tutor
+    // - Haven't started yet or are in progress
+    // - Have available capacity
+    const sessions = await Session.find({
+      tutor: tutorId,
+      startDate: { $gte: now },
+      status: { $in: ['Scheduled', 'Rescheduled'] }
+    })
+      .populate('students', 'name email')
+      .populate('tutor', 'name')
+      .sort({ startDate: 1 });
+
+    // Filter sessions with available capacity
+    const availableSessions = sessions.filter(session =>
+      session.students.length < session.capacity
+    );
+
+    // Format response
+    const formattedSessions = availableSessions.map(session => ({
+      _id: session._id,
+      subject: session.subject,
+      location: session.location,
+      schedule: session.schedule,
+      startDate: session.startDate,
+      duration: session.duration,
+      capacity: session.capacity,
+      enrolledCount: session.students.length,
+      availableSpots: session.capacity - session.students.length,
+      description: session.description,
+      tutor: session.tutor
+    }));
+
+    res.status(200).json({
+      success: true,
+      sessions: formattedSessions
+    });
+  } catch (error) {
+    console.error("Get available sessions error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+// ---------------------------------------------------
+// JOIN SESSION (student self-enrollment)
+// ---------------------------------------------------
+export const joinSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { studentId } = req.body; // User ID from request
+
+    // Find session
+    const session = await Session.findById(sessionId).populate('tutor', 'name userId');
+    if (!session) {
+      return res.status(404).json({ success: false, message: "Session not found" });
+    }
+
+    // Check capacity
+    if (session.students.length >= session.capacity) {
+      return res.status(400).json({ success: false, message: "Session is full" });
+    }
+
+    // Find student profile
+    const studentProfile = await Student.findOne({ userId: studentId });
+    if (!studentProfile) {
+      return res.status(404).json({ success: false, message: "Student profile not found" });
+    }
+
+    // Check if already enrolled
+    if (session.students.some(s => s.toString() === studentProfile._id.toString())) {
+      return res.status(400).json({ success: false, message: "Already enrolled in this session" });
+    }
+
+    // Add student to session
+    session.students.push(studentProfile._id);
+    await session.save();
+
+    // No notification sent to tutor per requirements
+
+    res.status(200).json({
+      success: true,
+      message: "Successfully joined session",
+      session
+    });
+  } catch (error) {
+    console.error("Join session error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

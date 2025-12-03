@@ -19,12 +19,12 @@ api.interceptors.request.use(
   (config) => {
     // Get token from localStorage
     const token = localStorage.getItem('token');
-    
+
     // If token exists, add it to Authorization header
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => {
@@ -42,7 +42,7 @@ api.interceptors.response.use(
     if (error.response) {
       // Server responded with error
       console.error('API Error:', error.response.data);
-      
+
       // Handle 401 Unauthorized (token expired or invalid)
       if (error.response.status === 401) {
         console.warn('Authentication failed. Token may be expired.');
@@ -181,6 +181,15 @@ export const removeAuthToken = () => {
  */
 export const isAuthenticated = () => {
   return !!localStorage.getItem('token');
+};
+
+export const getTutorAvailableSessions = async (tutorId) => {
+  const response = await axios.get(`/api/session/tutor/${tutorId}/available`);
+  return response.data;
+};
+export const joinSession = async (sessionId, studentId) => {
+  const response = await axios.post(`/api/session/${sessionId}/join`, { studentId });
+  return response.data;
 };
 
 export default api;
