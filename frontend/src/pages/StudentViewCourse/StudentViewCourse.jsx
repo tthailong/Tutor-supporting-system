@@ -2,23 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentViewCourse.css";
 import Sidebar from "../../components/Sidebar/Sidebar";
-import RatingDisplay from '../../components/Sessioncard/RatingDisplay';
 import FeedbackForm from '../../components/Sessioncard/FeedbackForm';
 import { Link } from 'react-router-dom';
 
-const CourseCard = ({ course, studentId, onCancelSuccess }) => {
+const CourseCard = ({ course, studentId, onCancelSuccess, onGiveFeedback }) => {
   const navigate = useNavigate();
 
-  const dates = Object.keys(course.schedule);
+  const dates = Object.keys(course.schedule || {});
   const firstDate = dates[0];
-  const firstSlot = course.schedule[firstDate][0];
-  const [showFeedbackForm, setShowFeedbackForm] = React.useState(false);
-
-  const studentFeedback = course.studentFeedback || { submitted: false, rating: 0 };
-  const [session, setSession] = useState(course);
-  const handleFeedbackSubmit = (feedbackData) => {
-    setShowFeedbackForm(false);
-  };
+  const firstSlot = course.schedule?.[firstDate]?.[0] || { start: 'N/A', end: 'N/A' };
 
   const handleReschedule = () => {
     navigate(`/selecttimeslot/${course._id}`);
@@ -50,19 +42,20 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
 
   return (
     <div className="course-card">
-      <Link to={`/session/${session._id}`} className="title-link">
+      {/* SỬA Ở ĐÂY: thay 'session' bằng 'course' */}
+      <Link to={`/session/${course._id}`} className="title-link">
         <h3>{course.subject}</h3>
       </Link>
-      <p>Tutor: {course.tutor?.name}</p>
+      <p>Tutor: {course.tutor?.name || 'Unknown'}</p>
       <p>
         Time: {firstDate} {firstSlot.start} - {firstSlot.end}
       </p>
-      <p className="room">Room: {course.location}</p>
+      <p className="room">Room: {course.location || 'N/A'}</p>
 
       <div className="course-card-buttons">
         <button
           className="give-feedback-btn"
-          onClick={() => setShowFeedbackForm(true)}
+          onClick={() => onGiveFeedback(course)}
         >
           📝 Give Feedback
         </button>
@@ -73,21 +66,15 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
           Cancel
         </button>
       </div>
-      {showFeedbackForm && (
-        <FeedbackForm
-          session={course}
-          onSubmit={handleFeedbackSubmit}
-          onCancel={() => setShowFeedbackForm(false)}
-        />
-      )}
     </div>
   );
 };
 
 const StudentViewCourse = () => {
   const [courses, setCourses] = useState([]);
-  //const studentId = "677123abc123"; // ❗THAY BẰNG ID STUDENT ĐANG LOGIN
-
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  
   const user = JSON.parse(localStorage.getItem("user"));
   const studentId = user?.studentProfile;
 
@@ -105,8 +92,38 @@ const StudentViewCourse = () => {
     fetchMyCourses();
   }, []);
 
+  const handleGiveFeedback = (course) => {
+    console.log("Giving feedback for:", course);
+    setSelectedCourse(course);
+    setShowFeedbackForm(true);
+  };
+
+  const handleFeedbackSubmit = (feedbackData) => {
+    console.log("Submitting feedback for:", selectedCourse?._id, feedbackData);
+    
+    if (selectedCourse) {
+      // Cập nhật UI ngay lập tức
+      setCourses(prevCourses => 
+        prevCourses.map(course => 
+          course._id === selectedCourse._id 
+            ? { ...course, studentFeedback: feedbackData }
+            : course
+        )
+      );
+    }
+    
+    setShowFeedbackForm(false);
+    setSelectedCourse(null);
+    alert("Feedback submitted successfully!");
+  };
+
+  const handleFeedbackCancel = () => {
+    setShowFeedbackForm(false);
+    setSelectedCourse(null);
+  };
+
   return (
-    <div className="mycourses-container">
+    <div className={`mycourses-container ${showFeedbackForm ? 'modal-open' : ''}`}>
       <Sidebar />
 
       <div className="courses-list">
@@ -121,15 +138,22 @@ const StudentViewCourse = () => {
               course={course}
               studentId={studentId}
               onCancelSuccess={fetchMyCourses}
+              onGiveFeedback={handleGiveFeedback}
             />
           ))
         )}
       </div>
+
+      {/* Modal FeedbackForm */}
+      {showFeedbackForm && selectedCourse && (
+        <FeedbackForm
+          session={selectedCourse}
+          onSubmit={handleFeedbackSubmit}
+          onCancel={handleFeedbackCancel}
+        />
+      )}
     </div>
   );
 };
-
-
-
 
 export default StudentViewCourse;

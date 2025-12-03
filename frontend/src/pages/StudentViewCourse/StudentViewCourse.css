@@ -122,3 +122,50 @@
     transform: translateX(4px);
     transition: all 0.2s;
 }
+
+.course-card {
+  position: relative;
+  z-index: 1;
+  transition: z-index 0.3s;
+}
+
+/* Khi modal mở, đẩy các card xuống dưới */
+.mycourses-container.modal-open .course-card {
+  z-index: 0;
+}
+
+/* Style cho nút Give Feedback */
+.give-feedback-btn {
+  background: linear-gradient(135deg, #4299e1, #3182ce);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.give-feedback-btn:hover {
+  background: linear-gradient(135deg, #3182ce, #2b6cb0);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(66, 153, 225, 0.3);
+}
+
+/* Override để đảm bảo modal luôn trên cùng */
+.feedback-modal-overlay {
+  position: fixed !important;
+  z-index: 9999 !important;
+}
+
+/* Thêm class cho container khi modal mở */
+.mycourses-container {
+  position: relative;
+}
+
+/* Đảm bảo sidebar không bị ảnh hưởng bởi modal */
+.mycourses-container > .sidebar {
+  z-index: 10;
+  position: relative;
+}
