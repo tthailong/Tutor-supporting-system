@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Manual.css';
 import { FaStar, FaUserCircle, FaSearch, FaFilter, FaTimes, FaCheckCircle, FaCalendar, FaClock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { getTutors, createManualMatchRequest, getTutorAvailability } from '../../../services/apiService';
+import { getTutors, createManualMatchRequest, getTutorAvailability, getTutorAvailableSessions, joinSession } from '../../../services/apiService';
 
 const Manual = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Manual = () => {
   const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -27,6 +27,10 @@ const Manual = () => {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
 
+  const [tutorSessions, setTutorSessions] = useState([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [viewMode, setViewMode] = useState('availability');
+
   // Fetch tutors from API
   useEffect(() => {
     fetchTutors();
@@ -36,18 +40,18 @@ const Manual = () => {
   const fetchTutors = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const filters = {};
-      
+
       if (selectedSubject !== "All Subjects") {
         filters.subject = selectedSubject;
       }
-      
+
       if (selectedDay !== "Any Day") {
         filters.dayOfWeek = selectedDay;
       }
-      
+
       const response = await getTutors(filters);
       setTutors(response.data.tutors);
     } catch (err) {
@@ -63,18 +67,23 @@ const Manual = () => {
     setSelectedSubjectForRequest(tutor.expertise?.[0] || "");
     setSelectedTimeSlot(null);
     setLoadingAvailability(true);
-    
+    setLoadingSessions(true);
     try {
-      // Fetch tutor's full availability
-      const response = await getTutorAvailability(tutor._id);
-      // Backend returns { availability, bookedSlots } directly
-      setTutorAvailability(response.data.availability);
+      // Fetch both availability and existing sessions
+      const [availabilityRes, sessionsRes] = await Promise.all([
+        getTutorAvailability(tutor._id),
+        getTutorAvailableSessions(tutor._id)
+      ]);
+
+      setTutorAvailability(availabilityRes.data.availability);
+      setTutorSessions(sessionsRes.sessions || []);
       setShowConfirmModal(true);
     } catch (err) {
-      alert('Failed to load tutor availability: ' + (err.response?.data?.message || err.message));
-      console.error('Error fetching availability:', err);
+      alert('Failed to load tutor data: ' + (err.response?.data?.message || err.message));
+      console.error('Error fetching tutor data:', err);
     } finally {
       setLoadingAvailability(false);
+      setLoadingSessions(false);
     }
   };
 
@@ -90,7 +99,7 @@ const Manual = () => {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await createManualMatchRequest({
         tutorId: selectedTutor._id,
@@ -98,7 +107,7 @@ const Manual = () => {
         selectedTimeSlot,
         description: `Manual selection for ${selectedSubjectForRequest}`
       });
-      
+
       setShowConfirmModal(false);
       setShowSuccessModal(true);
     } catch (err) {
@@ -115,19 +124,55 @@ const Manual = () => {
     navigate('/studentviewcourse');
   };
 
+  const formatSchedule = (schedule) => {
+    if (!schedule) return 'N/A';
+    const entries = Object.entries(schedule);
+    if (entries.length === 0) return 'N/A';
+
+    const [date, slots] = entries[0];
+    const timeStr = slots.map(s => `${s.start}-${s.end}`).join(', ');
+    return `${date} at ${timeStr}`;
+  };
+
+  const handleJoinSession = async (sessionId) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    if (!window.confirm("Join this session? You'll be enrolled immediately.")) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await joinSession(sessionId, user._id || user.id);
+      alert("Successfully joined the session!");
+      setShowConfirmModal(false);
+      navigate('/studentviewcourse');
+    } catch (err) {
+      alert('Failed to join session: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Format availability for display
   const getAvailabilitySlots = () => {
     if (!tutorAvailability) return [];
-    
+
+    const now = new Date();
     const slots = [];
+
     for (const [date, timeSlots] of Object.entries(tutorAvailability)) {
       timeSlots.forEach(slot => {
-        slots.push({
-          date,
-          startTime: slot.start,
-          endTime: slot.end,
-          display: `${date} | ${slot.start} - ${slot.end}`
-        });
+        const slotDateTime = new Date(`${date}T${slot.start}`);
+        if (slotDateTime > now) {
+          slots.push({
+            date,
+            startTime: slot.start,
+            endTime: slot.end,
+            display: `${date} | ${slot.start} - ${slot.end}`
+          });
+        }
       });
     }
     return slots.sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -135,8 +180,8 @@ const Manual = () => {
 
   // Filter tutors by search term (client-side)
   const filteredTutors = tutors.filter(tutor => {
-    const matchesSearch = tutor.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (tutor.bio && tutor.bio.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = tutor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (tutor.bio && tutor.bio.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesSearch;
   });
 
@@ -153,19 +198,19 @@ const Manual = () => {
       <div className="filter-section">
         <div className="search-bar">
           <FaSearch className="search-icon" />
-          <input 
-            type="text" 
-            placeholder="Search by name or keyword..." 
+          <input
+            type="text"
+            placeholder="Search by name or keyword..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div className="filters">
           <div className="filter-group">
             <FaFilter className="filter-icon" />
-            <select 
-              value={selectedSubject} 
+            <select
+              value={selectedSubject}
               onChange={(e) => setSelectedSubject(e.target.value)}
             >
               {subjects.map(sub => <option key={sub} value={sub}>{sub}</option>)}
@@ -173,8 +218,8 @@ const Manual = () => {
           </div>
 
           <div className="filter-group">
-            <select 
-              value={selectedDay} 
+            <select
+              value={selectedDay}
               onChange={(e) => setSelectedDay(e.target.value)}
             >
               {days.map(day => <option key={day} value={day}>{day}</option>)}
@@ -190,10 +235,10 @@ const Manual = () => {
       )}
 
       {error && (
-        <div className="error-state" style={{ 
-          textAlign: 'center', 
-          padding: '20px', 
-          backgroundColor: '#fee', 
+        <div className="error-state" style={{
+          textAlign: 'center',
+          padding: '20px',
+          backgroundColor: '#fee',
           color: '#c00',
           borderRadius: '8px',
           margin: '20px 0'
@@ -202,14 +247,14 @@ const Manual = () => {
           <button onClick={fetchTutors} style={{ marginTop: '10px' }}>Retry</button>
         </div>
       )}
-      
+
       {!loading && !error && (
         <div className="tutor-grid">
           {filteredTutors.length > 0 ? (
             filteredTutors.map((tutor) => (
               <div key={tutor._id} className="tutor-card">
                 <div className="tutor-avatar">
-                  <img 
+                  <img
                     src={`https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&size=120&background=random&bold=true`}
                     alt={tutor.name}
                     style={{
@@ -247,7 +292,7 @@ const Manual = () => {
           )}
         </div>
       )}
-      
+
       <button className="back-btn" onClick={() => navigate('/tutormatching')}>Back to Options</button>
 
       {/* Confirmation Modal with Subject and Timeslot Selection */}
@@ -257,15 +302,15 @@ const Manual = () => {
             <button className="modal-close" onClick={() => setShowConfirmModal(false)}>
               <FaTimes />
             </button>
-            
+
             <div className="modal-header">
               <h2>Book Session with {selectedTutor.name}</h2>
             </div>
-            
+
             <div className="modal-body">
               <div className="tutor-preview">
                 <div className="tutor-avatar-large">
-                  <img 
+                  <img
                     src={`https://ui-avatars.com/api/?name=${encodeURIComponent(selectedTutor.name)}&size=150&background=4EAAF3&color=fff&bold=true`}
                     alt={selectedTutor.name}
                     style={{
@@ -280,67 +325,108 @@ const Manual = () => {
                 <h3>{selectedTutor.name}</h3>
                 <p className="subject">{selectedTutor.expertise?.join(', ')}</p>
               </div>
-
-              {/* Subject Selection */}
-              <div className="selection-group">
-                <label><FaFilter /> Select Subject:</label>
-                <select 
-                  value={selectedSubjectForRequest}
-                  onChange={(e) => setSelectedSubjectForRequest(e.target.value)}
-                  className="subject-select"
+              {/* Tab Navigation */}
+              <div className="view-tabs">
+                <button
+                  className={`tab ${viewMode === 'availability' ? 'active' : ''}`}
+                  onClick={() => setViewMode('availability')}
                 >
-                  {selectedTutor.expertise?.map(subject => (
-                    <option key={subject} value={subject}>{subject}</option>
-                  ))}
-                </select>
+                  Request New Session
+                </button>
+                <button
+                  className={`tab ${viewMode === 'sessions' ? 'active' : ''}`}
+                  onClick={() => setViewMode('sessions')}
+                >
+                  Join Existing ({tutorSessions.length})
+                </button>
               </div>
-
-              {/* Timeslot Selection */}
-              <div className="selection-group">
-                <label><FaClock /> Select Time Slot:</label>
-                {loadingAvailability ? (
-                  <p>Loading availability...</p>
-                ) : (
-                  <div className="timeslot-list">
-                    {getAvailabilitySlots().length > 0 ? (
-                      getAvailabilitySlots().map((slot, index) => (
-                        <div 
-                          key={index}
-                          className={`timeslot-item ${selectedTimeSlot?.date === slot.date && selectedTimeSlot?.startTime === slot.startTime ? 'selected' : ''}`}
-                          onClick={() => setSelectedTimeSlot({
-                            date: slot.date,
-                            startTime: slot.startTime,
-                            endTime: slot.endTime
-                          })}
-                        >
-                          <FaCalendar style={{ marginRight: '8px' }} />
-                          {slot.display}
-                        </div>
-                      ))
+              {viewMode === 'availability' ? (
+                <>
+                  {/* Subject Selection */}
+                  <div className="selection-group">
+                    <label><FaFilter /> Select Subject:</label>
+                    <select
+                      value={selectedSubjectForRequest}
+                      onChange={(e) => setSelectedSubjectForRequest(e.target.value)}
+                      className="subject-select"
+                    >
+                      {selectedTutor.expertise?.map(subject => (
+                        <option key={subject} value={subject}>{subject}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* Timeslot Selection */}
+                  <div className="selection-group">
+                    <label><FaClock /> Select Time Slot:</label>
+                    {loadingAvailability ? (
+                      <p>Loading availability...</p>
                     ) : (
-                      <p style={{ color: '#999' }}>No available time slots</p>
+                      <div className="timeslot-list">
+                        {getAvailabilitySlots().length > 0 ? (
+                          getAvailabilitySlots().map((slot, index) => (
+                            <div
+                              key={index}
+                              className={`timeslot-item ${selectedTimeSlot?.date === slot.date && selectedTimeSlot?.startTime === slot.startTime ? 'selected' : ''}`}
+                              onClick={() => setSelectedTimeSlot({
+                                date: slot.date,
+                                startTime: slot.startTime,
+                                endTime: slot.endTime
+                              })}
+                            >
+                              <FaCalendar style={{ marginRight: '8px' }} />
+                              {slot.display}
+                            </div>
+                          ))
+                        ) : (
+                          <p style={{ color: '#999' }}>No available time slots</p>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-
-              {selectedTimeSlot && (
-                <div className="selected-info">
-                  <p><strong>Selected:</strong> {selectedSubjectForRequest} on {selectedTimeSlot.date} at {selectedTimeSlot.startTime}-{selectedTimeSlot.endTime}</p>
+                  {selectedTimeSlot && (
+                    <div className="selected-info">
+                      <p><strong>Selected:</strong> {selectedSubjectForRequest} on {selectedTimeSlot.date} at {selectedTimeSlot.startTime}-{selectedTimeSlot.endTime}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="sessions-list">
+                  {loadingSessions ? (
+                    <p>Loading sessions...</p>
+                  ) : tutorSessions.length > 0 ? (
+                    tutorSessions.map(session => (
+                      <div key={session._id} className="session-card">
+                        <h4>{session.subject}</h4>
+                        <p><strong>Location:</strong> {session.location}</p>
+                        <p><strong>Schedule:</strong> {formatSchedule(session.schedule)}</p>
+                        <p><strong>Capacity:</strong> {session.enrolledCount}/{session.capacity} ({session.availableSpots} spots left)</p>
+                        {session.description && <p className="session-desc">{session.description}</p>}
+                        <button
+                          className="btn-join"
+                          onClick={() => handleJoinSession(session._id)}
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? 'Joining...' : 'Join This Session'}
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p style={{ color: '#999', textAlign: 'center', padding: '20px' }}>No available sessions to join</p>
+                  )}
                 </div>
               )}
             </div>
-            
+
             <div className="modal-footer">
-              <button 
-                className="btn-cancel" 
+              <button
+                className="btn-cancel"
                 onClick={() => setShowConfirmModal(false)}
                 disabled={isSubmitting}
               >
                 Cancel
               </button>
-              <button 
-                className="btn-confirm" 
+              <button
+                className="btn-confirm"
                 onClick={handleConfirmSelection}
                 disabled={isSubmitting || !selectedTimeSlot}
               >
@@ -361,7 +447,7 @@ const Manual = () => {
                 <FaCheckCircle />
               </div>
             </div>
-            
+
             <div className="modal-body">
               <p className="success-message">
                 Your booking request to <strong>{selectedTutor.name}</strong> has been submitted successfully!
@@ -376,7 +462,7 @@ const Manual = () => {
                 </ul>
               </div>
             </div>
-            
+
             <div className="modal-footer">
               <button className="btn-primary" onClick={handleSuccessClose}>
                 Go to My Sessions

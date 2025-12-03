@@ -25,8 +25,8 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData, tutor }) => {
   const SUBJECTS = tutor?.expertise || [];
   const initialState = {
     name: "", location: "",
-    startDate: getTodayDateString(), // 👈 NEW: Default to today (YYYY-MM-DD)
-    timeSlots: [], capacity: 10, duration: 1, description: "", studentCount: 0
+    startDate: getTodayDateString(),
+    timeSlots: [], capacity: 10, duration: 1, description: "", studentCount: 0, minimumCapacity: 1
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -95,8 +95,14 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData, tutor }) => {
           </div>
 
           <div className="form-group">
-            <label>Capacity</label>
-            <input type="number" name="capacity" value={formData.capacity} onChange={handleChange} min={formData.studentCount || 1} />
+            <label>Capacity {formData.minimumCapacity > 1 && `(Min: ${formData.minimumCapacity} students requesting)`}</label>
+            <input
+              type="number"
+              name="capacity"
+              value={formData.capacity}
+              onChange={handleChange}
+              min={formData.minimumCapacity || formData.studentCount || 1}
+            />
           </div>
 
           <div className="form-group">

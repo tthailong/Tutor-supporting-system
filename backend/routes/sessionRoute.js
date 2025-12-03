@@ -1,7 +1,10 @@
 import express from "express";
-import { createSession, updateSession, deleteSession, getSessionsByTutor, getSessionById, addMaterial, deleteMaterial } from "../controllers/sessionController.js";
-import multer from "multer";
+import {
+    createSession, updateSession, deleteSession, getSessionsByTutor,
+    getSessionById, addMaterial, deleteMaterial, getTutorAvailableSessions, joinSession
+} from "../controllers/sessionController.js";
 import { authMiddleware } from '../middleware/auth.js'; // Adjust path as needed
+import multer from "multer";
 
 const sessionRouter = express.Router();
 const upload = multer();
@@ -22,4 +25,7 @@ sessionRouter.get('/:id', authMiddleware, getSessionById);
 sessionRouter.post('/:id/materials', authMiddleware, addMaterial);
 sessionRouter.delete('/:id/materials/:materialId', authMiddleware, deleteMaterial);
 
+// Student self-enrollment routes
+sessionRouter.get("/tutor/:tutorId/available", getTutorAvailableSessions);
+sessionRouter.post("/:sessionId/join", joinSession);
 export default sessionRouter;
