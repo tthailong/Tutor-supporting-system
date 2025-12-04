@@ -2,23 +2,17 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StudentViewCourse.css";
 import Sidebar from "../../components/Sidebar/Sidebar";
-import RatingDisplay from '../../components/Sessioncard/RatingDisplay';
 import FeedbackForm from '../../components/Sessioncard/FeedbackForm';
 import { Link } from 'react-router-dom';
 
 const CourseCard = ({ course, studentId, onCancelSuccess }) => {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const dates = Object.keys(course.schedule);
   const firstDate = dates[0];
   const firstSlot = course.schedule[firstDate][0];
   const [showFeedbackForm, setShowFeedbackForm] = React.useState(false);
-
-  const studentFeedback = course.studentFeedback || { submitted: false, rating: 0 };
-  const [session, setSession] = useState(course);
-  const handleFeedbackSubmit = (feedbackData) => {
-    setShowFeedbackForm(false);
-  };
 
   const handleReschedule = () => {
     navigate(`/selecttimeslot/${course._id}`);
@@ -32,6 +26,10 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
         `/api/student/session/${course._id}/cancel/${studentId}`,
         {
           method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
         }
       );
 
@@ -50,7 +48,7 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
 
   return (
     <div className="course-card">
-      <Link to={`/session/${session._id}`} className="title-link">
+      <Link to={`/session/${course._id}`} className="title-link">
         <h3>{course.subject}</h3>
       </Link>
       <p>Tutor: {course.tutor?.name}</p>
@@ -73,10 +71,10 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
           Cancel
         </button>
       </div>
+
       {showFeedbackForm && (
         <FeedbackForm
           session={course}
-          onSubmit={handleFeedbackSubmit}
           onCancel={() => setShowFeedbackForm(false)}
         />
       )}
@@ -86,14 +84,19 @@ const CourseCard = ({ course, studentId, onCancelSuccess }) => {
 
 const StudentViewCourse = () => {
   const [courses, setCourses] = useState([]);
-  //const studentId = "677123abc123"; // ❗THAY BẰNG ID STUDENT ĐANG LOGIN
-
   const user = JSON.parse(localStorage.getItem("user"));
   const studentId = user?.studentProfile;
+  const token = localStorage.getItem("token");
 
   const fetchMyCourses = async () => {
     try {
-      const res = await fetch(`/api/student/${studentId}/courses`);
+      const res = await fetch(`/api/student/${studentId}/courses`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
+
       const data = await res.json();
       setCourses(data.sessions || []);
     } catch (err) {
@@ -128,8 +131,5 @@ const StudentViewCourse = () => {
     </div>
   );
 };
-
-
-
 
 export default StudentViewCourse;

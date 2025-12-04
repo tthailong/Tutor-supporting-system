@@ -72,42 +72,43 @@ export const getAvailableRescheduleSlots = async (req, res) => {
     }
 
     // -------------------------
-    // B. Other sessions (joinable)
-    // -------------------------
-    const otherSessions = await Session.find({
-      tutor: tutorId,
-      _id: { $ne: sessionId }
-    })
-      .populate("students", "name")
-      .sort({ startDate: 1 });
+// B. Other sessions (joinable)
+// -------------------------
+const otherSessions = await Session.find({
+  tutor: tutorId,
+  _id: { $ne: sessionId },
+  subject: session.subject   // ✔️ chỉ lấy session cùng môn học
+})
+  .populate("students", "name")
+  .sort({ startDate: 1 });
 
-    const joinableSessions = [];
+const joinableSessions = [];
 
-    otherSessions.forEach(sess => {
-      const date = Array.from(sess.schedule.keys())[0];
-      const slot = sess.schedule.get(date)[0];
+otherSessions.forEach(sess => {
+  const date = Array.from(sess.schedule.keys())[0];
+  const slot = sess.schedule.get(date)[0];
 
-      const startNum = toNum(slot.start);
-      const endNum = toNum(slot.end);
+  const startNum = toNum(slot.start);
+  const endNum = toNum(slot.end);
 
-      const origStart = toNum(originalSlot.start);
-      const origEnd = toNum(originalSlot.end);
+  const origStart = toNum(originalSlot.start);
+  const origEnd = toNum(originalSlot.end);
 
-      if (sess.students.length >= sess.capacity) return; // full capacity
-      if (startNum === origStart && endNum === origEnd && date === originalDate) return;
+  if (sess.students.length >= sess.capacity) return; 
+  if (startNum === origStart && endNum === origEnd && date === originalDate) return;
 
-      joinableSessions.push({
-        type: "session",
-        sessionId: sess._id,
-        subject: sess.subject,
-        tutor: tutor.name,
-        date,
-        start: slot.start,
-        end: slot.end,
-        capacity: sess.capacity,
-        enrolled: sess.students.length
-      });
-    });
+  joinableSessions.push({
+    type: "session",
+    sessionId: sess._id,
+    subject: sess.subject,
+    tutor: tutor.name,
+    date,
+    start: slot.start,
+    end: slot.end,
+    capacity: sess.capacity,
+    enrolled: sess.students.length
+  });
+});
 
     return res.status(200).json({
       success: true,
