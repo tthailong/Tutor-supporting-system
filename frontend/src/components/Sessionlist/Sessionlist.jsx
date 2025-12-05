@@ -8,8 +8,6 @@ const user = JSON.parse(localStorage.getItem("user"));
 const token = localStorage.getItem("token"); // <-- retrieve token separately
 const TUTOR_ID = user?.tutorProfile;
 
-const API_URL = "http://localhost:4000/api/session";
-
 const getFirstSessionTime = (scheduleMap) => {
   if (!scheduleMap || typeof scheduleMap !== 'object') return null;
 
@@ -44,7 +42,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
   // 1. Fetch Sessions
   const fetchSessions = async () => {
     try {
-      const res = await fetch(`${API_URL}/tutors/${TUTOR_ID}`, {
+      const res = await fetch(`api/session/tutors/${TUTOR_ID}`, {
         headers: {
           'Authorization': `Bearer ${token}` // ✅ FIX: Send the token
         }
@@ -93,7 +91,7 @@ const Sessionlist = ({ role = 'tutor' }) => {
     if (!window.confirm("Are you sure you want to delete this session?")) return;
 
     try {
-      const res = await fetch(`${API_URL}/${session._id}`, {
+      const res = await fetch(`api/session/${session._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -146,12 +144,12 @@ const Sessionlist = ({ role = 'tutor' }) => {
         schedule: scheduleMapObject
       };
 
-      let url = `${API_URL}/create`;
+      let url = `api/session/create`;
       let method = 'POST';
 
       if (currentSession && currentSession._id) {
         // EDIT - Note: For simple edits, only non-schedule fields should change if students are enrolled.
-        url = `${API_URL}/${currentSession._id}`;
+        url = `api/session/${currentSession._id}`;
         method = 'PUT';
 
         // If editing, we only send fields that are editable (Capacity, Location, Description)

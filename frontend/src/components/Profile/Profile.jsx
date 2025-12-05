@@ -241,7 +241,7 @@ export default function Profile() {
               </label>
             </div>
             <div className="buttons-row">
-              <button type="submit" className="btn save">Save Student</button>
+              <button type="submit" className="btn save">Save Profile</button>
             </div>
           </form>
         )}
@@ -261,7 +261,7 @@ export default function Profile() {
               </label>
             </div>
             <div className="buttons-row">
-              <button type="submit" className="btn save">Save Tutor</button>
+              <button type="submit" className="btn save">Save Profile</button>
             </div>
           </form>
         )}

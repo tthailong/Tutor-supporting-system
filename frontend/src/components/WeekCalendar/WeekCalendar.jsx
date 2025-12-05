@@ -26,7 +26,7 @@ const WeekCalendar = () => {
   useEffect(() => {
     const fetchTutorData = async () => {
       try {
-        const res = await fetch(`http://localhost:4000/api/tutors/${TUTOR_ID}`, {
+        const res = await fetch(`/api/tutors/${TUTOR_ID}`, {
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}` // <--- add this
@@ -146,7 +146,7 @@ const WeekCalendar = () => {
 
     console.log("Submitting:", payload);
 
-    const res = await fetch("http://localhost:4000/api/tutors/availability", {
+    const res = await fetch("api/tutors/availability", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

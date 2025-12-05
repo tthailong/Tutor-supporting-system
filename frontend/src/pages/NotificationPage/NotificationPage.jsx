@@ -9,7 +9,6 @@ const NotificationPage = () => {
   console.log("Loaded user from localStorage:", user);
   const token = localStorage.getItem("token"); // <-- retrieve token separately
   const TUTOR_ID = user?.tutorProfile;
-  const API_URL = "http://localhost:4000/api/session";
 
   const userId = user?._id || user?.id;
 
@@ -215,7 +214,7 @@ const NotificationPage = () => {
         schedule: scheduleMapObject
       };
 
-      let url = `${API_URL}/create`;
+      let url = `api/session/create`;
       let method = 'POST';
 
       // 3. Check for Match Request Metadata (if currentSession exists, it's a review)
@@ -230,7 +229,7 @@ const NotificationPage = () => {
         payload.studentIdToEnroll = currentSession.studentId;
       } else if (currentSession && currentSession._id) {
         // This case handles generic EDIT (if implemented)
-        url = `${API_URL}/${currentSession._id}`;
+        url = `api/session/${currentSession._id}`;
         method = 'PUT';
         // ... (Add restricted payload logic for PUT if needed, similar to Sessionlist) ...
       }

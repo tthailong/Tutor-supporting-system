@@ -16,8 +16,6 @@ const Awards = () => {
     const TUTOR_ID = user?.tutorProfile;
     const token = localStorage.getItem('token');
 
-    const API_BASE = '/api';
-
     useEffect(() => {
         if (TUTOR_ID) {
             fetchAllData();
@@ -35,19 +33,19 @@ const Awards = () => {
             setLoading(true);
             
             const [studentsRes, sessionsRes, awardsRes] = await Promise.all([
-                fetch(`${API_BASE}/users/role/Student`, {
+                fetch(`api/users/role/Student`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 }),
-                fetch(`${API_BASE}/session/tutor/${TUTOR_ID}`, {
+                fetch(`api/session/tutors/${TUTOR_ID}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 }),
-                fetch(`${API_BASE}/awards/tutor/${TUTOR_ID}`, {
+                fetch(`api/awards/tutor/${TUTOR_ID}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -75,7 +73,7 @@ const Awards = () => {
             let response;
             
             if (editingAward) {
-                response = await fetch(`${API_BASE}/awards/${editingAward._id}`, {
+                response = await fetch(`api/awards/${editingAward._id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -87,7 +85,7 @@ const Awards = () => {
                     })
                 });
             } else {
-                response = await fetch(`${API_BASE}/awards`, {
+                response = await fetch(`api/awards`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -127,7 +125,7 @@ const Awards = () => {
         }
 
         try {
-            const response = await fetch(`${API_BASE}/awards/${awardId}`, {
+            const response = await fetch(`api/awards/${awardId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

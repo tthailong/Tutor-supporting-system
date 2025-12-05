@@ -70,7 +70,7 @@ const AwardModal = ({
     const handleSubmit = (e) => {
         e.preventDefault();
         
-        if (!formData.studentId || !formData.sessionId) {
+        if (!formData.studentId || !formData.sessionId || !formData.credits) {
             return;
         }
 
@@ -78,7 +78,7 @@ const AwardModal = ({
         const submitData = {
             ...formData,
             credits: Number(formData.credits) || 0,
-            scholarship: Number(formData.scholarship) || 0
+            scholarship: formData.scholarship ? Number(formData.scholarship) : 0
         };
 
         onSubmit(submitData);
@@ -165,7 +165,7 @@ const AwardModal = ({
 
                     <div className="form-group">
                         <label htmlFor="scholarship">
-                            Scholarship (VND) <span className="required">*</span>
+                            Scholarship (VND)
                         </label>
                         <input
                             type="number"
@@ -175,8 +175,7 @@ const AwardModal = ({
                             onChange={handleInputChange}
                             min="0"
                             step="1000"
-                            required
-                            placeholder="Enter scholarship amount"
+                            placeholder="Enter scholarship amount (optional)"
                         />
                     </div>
 
@@ -185,7 +184,7 @@ const AwardModal = ({
                             Cancel
                         </button>
                         <button type="submit" className="btn-submit">
-                            {editingAward ? 'Update Award' : 'Create Award'}
+                            {editingAward ? 'Update' : 'Save'}
                         </button>
                     </div>
                 </form>
