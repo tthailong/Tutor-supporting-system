@@ -253,7 +253,7 @@ export default function Profile() {
             <div className="options">
               <label className="option full-option">
                 <span>Expertise (comma separated)</span>
-                <input className="full-input" type="text" value={(tutor?.expertise || []).join(', ')} onChange={(e) => handleTutorChange('expertise', e.target.value.split(',').map(s=>s.trim()))} />
+                <input className="full-input" type="text" value={(tutor?.expertise || []).join(', ')} onChange={(e) => handleTutorChange('expertise', e.target.value.split(','))} />
               </label>
               <label className="option full-option">
                 <span>Description</span>
