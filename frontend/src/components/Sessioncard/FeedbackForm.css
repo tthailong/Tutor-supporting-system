@@ -4,139 +4,193 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.75); /* Tăng độ mờ hơn nữa */
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Đổi từ center sang flex-start */
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
-  padding: 20px 0; /* Thêm padding top/bottom */
-  overflow-y: auto; /* Cho phép scroll toàn bộ overlay */
+  align-items: flex-start;
+  z-index: 10000; /* Tăng z-index */
+  animation: fadeIn 0.25s ease-out; /* Rút ngắn animation */
+  padding: 40px 0;
+  overflow-y: auto;
+  backdrop-filter: blur(3px); /* Tăng blur */
+  -webkit-backdrop-filter: blur(3px); /* Hỗ trợ Safari */
 }
 
 .feedback-modal {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25); /* Shadow đậm hơn */
   width: 90%;
-  max-width: 500px;
-  max-height: 85vh; /* Giảm từ 90vh xuống 85vh */
-  overflow-y: auto;
-  animation: slideUp 0.3s ease;
-  margin: 20px auto; /* Thêm margin để căn giữa */
+  max-width: 600px; /* Tăng chiều rộng */
+  animation: slideUp 0.25s ease-out;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10001;
+  /* XÓA tất cả các thuộc tính liên quan đến max-height */
 }
 
 .feedback-form {
-  padding: 25px; /* Giảm padding */
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  /* XÓA min-height: 300px; */
 }
 
 .form-header {
   text-align: center;
-  margin-bottom: 20px; /* Giảm margin */
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 15px; /* Giảm padding */
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 20px;
 }
 
 .form-header h3 {
-  color: #2d3748;
-  font-size: 22px; /* Giảm font size */
-  margin-bottom: 6px;
+  color: #1a202c;
+  font-size: 24px;
+  margin-bottom: 8px;
   font-weight: 700;
 }
 
 .form-header p {
+  color: #4a5568;
+  font-size: 15px;
+  margin: 8px 0 0 0;
+  line-height: 1.5;
+}
+
+/* THÊM: CSS cho danh sách session trong form */
+.session-list-container {
+  margin: 20px 0;
+  max-height: 1000px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.session-review-item {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color 0.2s;
+}
+
+.session-review-item:last-child {
+  border-bottom: none;
+}
+
+.session-review-item:hover {
+  background-color: #edf2f7;
+}
+
+.session-review-title {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.session-review-meta {
+  font-size: 13px;
   color: #718096;
-  font-size: 13px; /* Giảm font size */
-  margin: 0;
   line-height: 1.4;
 }
 
+.session-review-meta div {
+  margin-bottom: 2px;
+}
+
+/* Điều chỉnh lại form-group */
 .form-group {
-  margin-bottom: 20px; /* Giảm margin */
+  margin-bottom: 24px;
 }
 
 .form-label {
   display: block;
   font-weight: 600;
-  color: #4a5568;
-  margin-bottom: 10px; /* Giảm margin */
-  font-size: 14px; /* Giảm font size */
+  color: #2d3748;
+  margin-bottom: 12px;
+  font-size: 15px;
 }
 
 .star-rating {
   display: flex;
   align-items: center;
-  gap: 12px; /* Giảm gap */
+  gap: 12px;
   flex-wrap: wrap;
+  margin: 8px 0;
 }
 
 .star {
-  font-size: 28px; /* Giảm font size */
-  color: #e2e8f0;
+  font-size: 32px; /* Tăng kích thước sao */
+  color: #cbd5e0;
   cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 4px; /* Giảm padding */
-  border-radius: 4px;
+  transition: all 0.15s ease;
+  padding: 4px;
+  border-radius: 6px;
+  line-height: 1;
 }
 
 .star:hover {
-  transform: scale(1.1); /* Giảm scale */
+  transform: scale(1.15);
   background-color: #f7fafc;
 }
 
 .star.filled {
-  color: #fbbf24;
+  color: #f6ad55; /* Màu cam vàng */
+  text-shadow: 0 2px 4px rgba(246, 173, 85, 0.3);
 }
 
 .rating-text {
   font-weight: 600;
-  color: #4a5568;
-  font-size: 13px; /* Giảm font size */
+  color: #2d3748;
+  font-size: 14px;
+  margin-left: 8px;
 }
 
 .form-textarea {
   width: 100%;
-  padding: 10px 12px; /* Giảm padding */
+  padding: 14px 16px;
   border: 2px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 15px;
   font-family: inherit;
   resize: vertical;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
   background-color: #fafafa;
-  min-height: 100px; /* Thêm min-height */
-  box-sizing: border-box; /* Quan trọng */
+  min-height: 120px;
+  box-sizing: border-box;
+  line-height: 1.5;
 }
 
 .form-textarea:focus {
   outline: none;
   border-color: #4299e1;
   background-color: white;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.15);
 }
 
 .form-textarea::placeholder {
   color: #a0aec0;
+  font-style: italic;
 }
 
 .form-actions {
   display: flex;
-  gap: 10px; /* Giảm gap */
+  gap: 12px;
   justify-content: flex-end;
-  margin-top: 25px; /* Giảm margin */
-  padding-top: 15px; /* Giảm padding */
+  margin-top: 32px;
+  padding-top: 20px;
   border-top: 1px solid #e2e8f0;
 }
 
 .btn {
-  padding: 10px 20px; /* Giảm padding */
+  padding: 12px 24px;
   border: none;
-  border-radius: 6px;
-  font-size: 13px; /* Giảm font size */
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 110px; /* Giảm min-width */
+  min-width: 120px;
 }
 
 .btn-cancel {
@@ -148,6 +202,7 @@
 .btn-cancel:hover {
   background-color: #edf2f7;
   border-color: #cbd5e0;
+  color: #2d3748;
 }
 
 .btn-submit {
@@ -158,75 +213,159 @@
 
 .btn-submit:hover {
   background: linear-gradient(135deg, #2f855a, #276749);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
 }
 
 .btn-submit:active {
   transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(56, 161, 105, 0.2);
 }
 
-/* Animations */
+/* Cập nhật animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { 
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to { 
+    opacity: 1;
+    backdrop-filter: blur(3px);
+  }
 }
 
 @keyframes slideUp {
   from { 
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(40px) scale(0.95);
   }
   to { 
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-/* Responsive */
-@media (max-width: 600px) {
+/* Responsive updates */
+@media (max-width: 768px) {
+  .feedback-modal-overlay {
+    padding: 20px 0;
+    align-items: center;
+  }
+  
   .feedback-modal {
     width: 95%;
-    margin: 10px;
-    max-height: 90vh; /* Tăng height trên mobile */
+    margin: 0;
+    max-width: 95%;
   }
   
   .feedback-form {
-    padding: 20px;
+    padding: 24px;
   }
   
   .form-actions {
     flex-direction: column;
+    gap: 10px;
   }
   
   .btn {
-    min-width: auto;
     width: 100%;
-  }
-  
-  .star-rating {
-    justify-content: center;
-    gap: 8px;
+    min-width: auto;
   }
   
   .star {
-    font-size: 24px;
+    font-size: 28px;
   }
   
-  .feedback-modal-overlay {
-    padding: 10px 0; /* Giảm padding trên mobile */
+  .session-list-container {
+    max-height: 200px;
   }
 }
 
 @media (max-width: 480px) {
   .feedback-form {
-    padding: 15px;
+    padding: 20px;
   }
   
   .form-header h3 {
-    font-size: 20px;
+    font-size: 22px;
+  }
+  
+  .form-header p {
+    font-size: 14px;
   }
   
   .star {
-    font-size: 22px;
+    font-size: 26px;
+  }
+  
+  .form-textarea {
+    min-height: 100px;
+    padding: 12px;
+    font-size: 14px;
+  }
+}
+
+/* CSS cho session detail box */
+.session-detail-box {
+  background: linear-gradient(135deg, #f0f7ff, #e6f0ff);
+  padding: 18px;
+  border-radius: 10px;
+  border-left: 4px solid #4299e1;
+  margin: 20px 0;
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.1);
+}
+
+.session-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(66, 153, 225, 0.2);
+}
+
+.session-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meta-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 14px;
+  min-width: 60px;
+}
+
+.meta-value {
+  color: #2d3748;
+  font-size: 14px;
+  flex: 1;
+}
+
+/* Responsive cho session detail */
+@media (max-width: 600px) {
+  .session-detail-box {
+    padding: 15px;
+  }
+  
+  .session-title {
+    font-size: 16px;
+  }
+  
+  .session-meta-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .meta-label {
+    min-width: auto;
   }
 }
