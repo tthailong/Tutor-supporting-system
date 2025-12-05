@@ -38,13 +38,11 @@ export default function Profile() {
           localStorage.setItem("user", JSON.stringify(res.data.data));
         }
 
-        // If user has studentProfile ID (or populated object), try to load it and student's sessions
-        const rawStudentProfile = (res?.data?.data?.studentProfile) || user.studentProfile;
-        const studentId = rawStudentProfile && (typeof rawStudentProfile === 'string' ? rawStudentProfile : (rawStudentProfile._id || rawStudentProfile.id));
+        // If user has studentProfile ID, try to load it and student's sessions
+        const studentId = (res?.data?.data?.studentProfile) || user.studentProfile;
         if (studentId) {
           try {
-            // Try loading student profile if endpoint exists
-            const sRes = await api.get(`/api/students/${studentId}`);
+            const sRes = await api.get(`/api/student/profile/${studentId}`);
             if (sRes?.data?.data) setStudent(sRes.data.data);
           } catch (err) {
             setStudent(prev => prev || { hcmutID: "", description: "", gpa: "", currentSubjects: [], currentTutors: [] });
@@ -56,7 +54,7 @@ export default function Profile() {
             const sessions = coursesRes?.data?.sessions || coursesRes?.data?.data || [];
             // extract unique subjects and tutor names
             const subjects = Array.from(new Set(sessions.map(s => s.subject).filter(Boolean)));
-            const tutors = Array.from(new Set(sessions.map(s => (s.tutor && (s.tutor.name || s.tutor)) || null).filter(Boolean)));
+            const tutors = Array.from(new Set(sessions.map(s => s.tutor?.name || s.tutor).filter(Boolean)));
             setStudentSubjects(subjects);
             setStudentTutors(tutors);
           } catch (err) {
@@ -65,8 +63,7 @@ export default function Profile() {
         }
 
         // If user has tutorProfile ID, try to load it and tutor sessions/stats
-        const rawTutorProfile = (res?.data?.data?.tutorProfile) || user.tutorProfile;
-        const tutorId = rawTutorProfile && (typeof rawTutorProfile === 'string' ? rawTutorProfile : (rawTutorProfile._id || rawTutorProfile.id));
+        const tutorId = (res?.data?.data?.tutorProfile) || user.tutorProfile;
         if (tutorId) {
           try {
             const tRes = await api.get(`/api/tutors/${tutorId}`);
@@ -81,7 +78,7 @@ export default function Profile() {
 
           // Fetch sessions taught by tutor to extract subjects
           try {
-            const sessionsRes = await api.get(`/api/session/tutor/${tutorId}`);
+            const sessionsRes = await api.get(`/api/session/tutors/${tutorId}`);
             const sessions = sessionsRes?.data?.data || [];
             const subjects = Array.from(new Set(sessions.map(s => s.subject).filter(Boolean)));
             setTutorSubjects(subjects);
@@ -133,7 +130,7 @@ export default function Profile() {
     try {
       // Try to PUT to backend if endpoint exists
       if (student._id) {
-        const res = await api.put(`/api/students/${student._id}`, student);
+        const res = await api.put(`/api/student/profile/${student._id}`, student);
         setSaveMessage(res?.data?.message || "Student profile updated");
       } else {
         // No backend endpoint: store locally as a fallback

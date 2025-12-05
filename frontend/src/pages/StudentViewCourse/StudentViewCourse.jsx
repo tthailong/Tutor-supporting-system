@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 
 const CourseCard = ({ course, studentId, onCancelSuccess, onGiveFeedback }) => {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   const dates = Object.keys(course.schedule || {});
   const firstDate = dates[0];
@@ -24,6 +25,10 @@ const CourseCard = ({ course, studentId, onCancelSuccess, onGiveFeedback }) => {
         `/api/student/session/${course._id}/cancel/${studentId}`,
         {
           method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
         }
       );
 
@@ -77,10 +82,17 @@ const StudentViewCourse = () => {
   
   const user = JSON.parse(localStorage.getItem("user"));
   const studentId = user?.studentProfile;
+  const token = localStorage.getItem("token");
 
   const fetchMyCourses = async () => {
     try {
-      const res = await fetch(`/api/student/${studentId}/courses`);
+      const res = await fetch(`/api/student/${studentId}/courses`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
+
       const data = await res.json();
       setCourses(data.sessions || []);
     } catch (err) {

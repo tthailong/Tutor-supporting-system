@@ -11,7 +11,8 @@ const NotificationPage = () => {
   const TUTOR_ID = user?.tutorProfile;
   const API_URL = "http://localhost:4000/api/session";
 
-  const userId = user?._id;
+  const userId = user?._id || user?.id;
+
   console.log("Derived userId:", userId);
 
   const [notifications, setNotifications] = useState([]);
@@ -19,7 +20,7 @@ const NotificationPage = () => {
   const loadNoti = async () => {
     const res = await fetch(`/api/notifications/${userId}`);
     const data = await res.json();
-    setNotifications(data.notifications);
+    setNotifications(data.notifications || []);
   };
   const markRead = async (id) => {
     await fetch(`/api/notifications/${id}/read`, {
@@ -58,33 +59,66 @@ const NotificationPage = () => {
     setIsFormOpen(true);
   };
 
-  const handleReviewMatch = (notification) => {
-    // Find the full registration data linked to the notification
-    const registration = notification.registrationId;
+  const handleReviewMatch = async (notification) => {
+    try {
+      // Fetch all matching notifications for the same timeslot/subject/tutor
+      const response = await fetch(`/api/notifications/${notification._id}/matching`);
+      const data = await response.json();
 
-    // 1. Prepare data structure expected by the Sessionform (similar to handleEditClick)
+      if (!response.ok) {
+        console.error("Failed to fetch matching notifications:", data.message);
+        // Fall back to single student if API fails
+        handleReviewMatchSingle(notification);
+        return;
+      }
+      const { students, count } = data;
+
+      // Find the full registration data linked to the notification
+      const registration = notification.registrationId;
+      // Prepare data structure expected by the Sessionform
+      const dateKey = notification.selectedTimeSlot.date;
+      const timeSlotStr = `${notification.selectedTimeSlot.startTime} - ${notification.selectedTimeSlot.endTime}`;
+      const prefilledSessionData = {
+        name: notification.subject,
+        location: "TBD - Please enter room",
+        capacity: count, // Set to number of requesting students
+        minimumCapacity: count, // NEW: Minimum capacity (cannot be decreased)
+        duration: 1,
+        description: registration?.description || `Session for ${notification.subject}`,
+        startDate: dateKey,
+        timeSlots: [timeSlotStr],
+        // Metadata for batch enrollment
+        studentIds: students.map(s => s.studentId), // All student IDs
+        registrationIds: students.map(s => s.registrationId).filter(Boolean), // All registration IDs
+        notificationIds: students.map(s => s.notificationId), // All notification IDs
+        studentCount: count, // Number of students requesting this timeslot
+      };
+      setCurrentSession(prefilledSessionData);
+      setIsFormOpen(true);
+    } catch (error) {
+      console.error("Error fetching matching notifications:", error);
+      // Fall back to single student
+      handleReviewMatchSingle(notification);
+    }
+  };
+
+  // ADD THIS NEW FALLBACK FUNCTION (place it after handleReviewMatch):
+  const handleReviewMatchSingle = (notification) => {
+    const registration = notification.registrationId;
     const dateKey = notification.selectedTimeSlot.date;
     const timeSlotStr = `${notification.selectedTimeSlot.startTime} - ${notification.selectedTimeSlot.endTime}`;
-
     const prefilledSessionData = {
-      // Fields matching the Sessionform structure
-      name: notification.subject, // Maps to 'subject'
-      location: "TBD - Please enter room", // Default/Suggested Location
-      capacity: 5, // Suggested default capacity
-      duration: 1, // Default 1 week
+      name: notification.subject,
+      location: "TBD - Please enter room",
+      capacity: 5,
+      duration: 1,
       description: registration?.description || `Session for ${notification.subject}`,
-
-      // Scheduling Data
       startDate: dateKey,
       timeSlots: [timeSlotStr],
-
-      // Metadata needed for the final API save (in the Sessionform's onSave)
       notificationId: notification._id,
       registrationId: registration?._id,
-      // Include student data if possible/needed, but student list might be complex
       studentId: notification.studentId?._id,
     };
-
     setCurrentSession(prefilledSessionData);
     setIsFormOpen(true);
   };
@@ -185,14 +219,15 @@ const NotificationPage = () => {
       let method = 'POST';
 
       // 3. Check for Match Request Metadata (if currentSession exists, it's a review)
-      if (currentSession?.registrationId) {
-        // This is a NEW session created from a match request review
-        // Inject the necessary IDs for the backend to update status and enroll student
+      if (currentSession?.studentIds && currentSession.studentIds.length > 0) {
+        // Batch enrollment from matching notifications
+        payload.studentIdsToEnroll = currentSession.studentIds;
+        payload.registrationIds = currentSession.registrationIds;
+        payload.notificationIds = currentSession.notificationIds;
+      } else if (currentSession?.registrationId) {
+        // Single student enrollment (backward compatibility)
         payload.registrationId = currentSession.registrationId;
         payload.studentIdToEnroll = currentSession.studentId;
-
-        // Note: We MUST use POST /create even if it came from currentSession, 
-        // because we are creating a NEW session, not editing an existing one.
       } else if (currentSession && currentSession._id) {
         // This case handles generic EDIT (if implemented)
         url = `${API_URL}/${currentSession._id}`;
@@ -215,9 +250,11 @@ const NotificationPage = () => {
 
       // 5. Handle Response
       if (res.ok) {
-        if (currentSession?.registrationId) {
+        if (currentSession?.notificationIds && currentSession.notificationIds.length > 0) {
+          alert(`Match confirmed! Session created with ${currentSession.studentCount} students.`);
+          // Notifications are marked as read by the backend
+        } else if (currentSession?.registrationId) {
           alert("Match confirmed! Session created successfully.");
-          // Mark the notification as read upon successful creation
           await markRead(currentSession.notificationId);
         } else {
           alert(currentSession ? "Session updated!" : "Session created!");

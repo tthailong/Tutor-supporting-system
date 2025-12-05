@@ -5,11 +5,21 @@ import {
   rescheduleSession,
   cancelStudentCourse
 } from "../controllers/studentCourseController.js";
+import { getStudentById, updateStudent } from "../controllers/studentController.js";
+import { authMiddleware, requireRole } from "../middleware/auth.js";
 
 const studentRouter = express.Router();
 
+// Áp dụng auth cho toàn bộ route của student
+studentRouter.use(authMiddleware);
+studentRouter.use(requireRole("Student"));
+
 // GET: Lấy danh sách session student đã đăng ký
 studentRouter.get("/:studentId/courses", getStudentCourses);
+
+// Student profile read/update
+studentRouter.get("/profile/:id", getStudentById);
+studentRouter.put("/profile/:id", updateStudent);
 
 // GET: Lấy danh sách slot rảnh khác của tutor
 studentRouter.get("/session/:sessionId/reschedule", getAvailableRescheduleSlots);

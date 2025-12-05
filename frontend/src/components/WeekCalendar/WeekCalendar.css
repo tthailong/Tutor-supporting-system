@@ -1,8 +1,6 @@
 /* --- Variables & Reset --- */
 :root {
-  --primary: #5f4ef3;
-  /* Indigo */
-  --primary-hover: #4EAAF3;
+
   --bg-app: #F3F4F6;
   /* Light Gray Background */
   --bg-card: #FFFFFF;
@@ -61,13 +59,13 @@
 
 .date-range {
   margin: 4px 0 0 0;
-  color: var(--text-light);
+  color: #5f4ef3;
   font-size: 0.9rem;
   font-weight: 500;
 }
 
 .date-range span {
-  color: var(--primary);
+  color: #5f4ef3;
   font-weight: 600;
 }
 
@@ -166,14 +164,14 @@
 
 /* Highlight Current Day */
 .header-day.today .day-number {
-  background-color: var(--primary);
+  background-color: #5f4ef3;
   color: white;
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(79, 70, 229, 0.4);
 }
 
 .header-day.today .day-name {
-  color: var(--primary);
+  color: #5f4ef3;
 }
 
 /* --- Grid Body (Scrollable) --- */
