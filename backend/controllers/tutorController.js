@@ -20,6 +20,7 @@ export const getTutorData = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      data: tutor,
       availability: tutor.availability || {},
       bookedSlots: tutor.bookedSlots || [],
       expertise: tutor.expertise || []
