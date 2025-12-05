@@ -65,7 +65,7 @@ const SessionForm = ({ isOpen, onClose, onSave, sessionData, tutor }) => {
       return;
     }
     // Basic check: Ensure selected date is not in the past relative to the current date string
-    if (formData.startDate < getTodayDateString()) { alert("Start Date cannot be in the past."); return; }
+    if (!sessionData && formData.startDate < getTodayDateString()) { alert("Start Date cannot be in the past."); return; }
 
 
     onSave(formData);
