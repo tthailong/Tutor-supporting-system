@@ -425,13 +425,15 @@ const Manual = () => {
               >
                 Cancel
               </button>
-              <button
-                className="btn-confirm"
-                onClick={handleConfirmSelection}
-                disabled={isSubmitting || !selectedTimeSlot}
-              >
-                {isSubmitting ? 'Processing...' : 'Confirm Booking'}
-              </button>
+              {viewMode === 'availability' && (
+                <button
+                  className="btn-confirm"
+                  onClick={handleConfirmSelection}
+                  disabled={isSubmitting || !selectedTimeSlot}
+                >
+                  {isSubmitting ? 'Processing...' : 'Confirm Booking'}
+                </button>
+              )}
             </div>
           </div>
         </div>
