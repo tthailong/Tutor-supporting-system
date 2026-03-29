@@ -116,9 +116,6 @@ const SessioncardWithFeedback = ({ sessionData, role = 'student', onEdit, onDele
             </span>
           )}
 
-          <span onClick={() => handleReschedule(session)} title="Reschedule">
-            🗓️
-          </span>
 
           {role === 'tutor' && (
             <>
