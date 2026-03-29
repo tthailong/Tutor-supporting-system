@@ -14,6 +14,19 @@ MongoDB Compass is optional and can be used to manually inspect or modify the da
 
 ---
 
+## ⚙️ Environment Setup
+
+Before running the application, you need to configure the environment variables:
+
+1.  Navigate to the `backend` folder.
+2.  Copy `.env.example` to a new file named `.env`:
+    ```bash
+    cp .env.example .env
+    ```
+3.  Open `.env` and fill in your actual values (MongoDB URI, JWT Secret, etc.).
+
+---
+
 ## 🌐 Running the Application
 
 The application requires the frontend and backend to be started separately.
@@ -52,7 +65,7 @@ npm run server
 
 ## 🔗 Notes
 
-* Adjust ports and environment variables in `.env` files if needed.
-* Frontend and backend communicate via API endpoints defined in the backend.
+*   The backend requires a `.env` file to connect to MongoDB and handle authentication.
+*   Frontend and backend communicate via API endpoints defined in the backend.
 
 ---
